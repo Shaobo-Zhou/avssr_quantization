@@ -12,19 +12,20 @@ def inf_loop(data_loader):
         yield from loader
 
 
-def get_dataloaders(config):
+def get_dataloaders(config, text_encoder):
     # transforms or augmentations init
     batch_transforms = instantiate(config.transforms.batch_transforms)
-
-    # dataset partitions init
-    datasets = instantiate(config.datasets)  # instance transorms are defined inside
 
     # dataloaders init
     dataloaders = {}
     for dataset_partition in config.datasets.keys():
+        # dataset partitions init
+        dataset = instantiate(config.datasets[dataset_partition],
+                              text_encoder=text_encoder)  # instance transorms are defined inside
+
         partition_dataloader = instantiate(
             config.dataloader,
-            dataset=datasets[dataset_partition],
+            dataset=dataset,
             collate_fn=collate_fn,
             drop_last=(dataset_partition == "train"),
             shuffle=(dataset_partition == "train"),

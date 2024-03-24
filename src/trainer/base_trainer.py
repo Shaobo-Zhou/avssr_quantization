@@ -26,6 +26,7 @@ class BaseTrainer:
         device,
         dataloaders,
         logger,
+        text_encoder,
         epoch_len=None,
         skip_oom=True,
         batch_transforms=None,
@@ -40,6 +41,8 @@ class BaseTrainer:
 
         self.logger = logger
         self.log_step = config.trainer.get("log_step", 50)
+
+        self.text_encoder = text_encoder
 
         self.model = model
         self.criterion = criterion
@@ -93,12 +96,12 @@ class BaseTrainer:
         self.train_metrics = MetricTracker(
             *self.config.writer.loss_names,
             "grad_norm",
-            *[m.name for m in self.metrics],
+            *[m.name for m in self.metrics["train"]],
             writer=self.writer,
         )
         self.evaluation_metrics = MetricTracker(
             *self.config.writer.loss_names,
-            *[m.name for m in self.metrics],
+            *[m.name for m in self.metrics["inference"]],
             writer=self.writer,
         )
 

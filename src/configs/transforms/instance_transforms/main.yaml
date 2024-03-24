@@ -1,0 +1,20 @@
+train:
+  video: # apply transform to video only
+    _target_: torchvision.transforms.v2.Compose
+    transforms:
+      - _target_: torchvision.transforms.v2.RandomCrop
+        size: [88, 88]
+      - _target_: torchvision.transforms.v2.RandomHorizontalFlip
+        p: 0.5
+      - _target_: src.transforms.Normalize
+        mean: 0.421 
+        std: 0.165
+inference:
+  video: # apply transform to video only
+    _target_: torchvision.transforms.v2.Compose
+    transforms:
+      - _target_: torchvision.transforms.v2.CenterCrop
+        size: [88, 88]
+      - _target_: src.transforms.Normalize
+        mean: 0.421 
+        std: 0.165

@@ -1,0 +1,6 @@
+_target_: src.model.ExampleModel
+n_audio_feats: 32000
+n_video_feats: 88
+n_hidden_channels: 8
+n_video_channels: 50
+fc_hidden: 512

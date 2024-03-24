@@ -1,6 +1,10 @@
 torch==2.2.0
 torchvision==0.17.0
-torchmetrics
+torchaudio==2.2.0
+torchmetrics[all]
+pesq
+pyctcdecode
+soundfile
 numpy
 tqdm
 matplotlib

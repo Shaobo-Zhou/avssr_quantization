@@ -23,7 +23,7 @@ def set_random_seed(seed):
     random.seed(seed)
 
 
-@hydra.main(version_base=None, config_path="src/configs", config_name="baseline")
+@hydra.main(version_base=None, config_path="src/configs", config_name="example")
 def main(config):
     set_random_seed(config.trainer.seed)
 
@@ -34,16 +34,27 @@ def main(config):
     else:
         device = config.trainer.device
 
+    # setup text_encoder
+    text_encoder = instantiate(config.text_encoder)
+
     # setup data_loader instances
-    dataloaders, batch_transforms = get_dataloaders(config)
+    dataloaders, batch_transforms = get_dataloaders(config, text_encoder)
 
     # build model architecture, then print to console
-    model = instantiate(config.model).to(device)
+    model = instantiate(config.model, n_tokens=len(text_encoder)).to(device)
     logger.info(model)
 
     # get function handles of loss and metrics
     loss_function = instantiate(config.loss_function).to(device)
-    metrics = instantiate(config.metrics)
+
+    metrics = {
+        "train": [],
+        "inference": []
+    }
+    for metric_config in config.metrics.train:
+        metrics["train"].append(instantiate(metric_config, text_encoder=text_encoder))
+    for metric_config in config.metrics.inference:
+        metrics["inference"].append(instantiate(metric_config, text_encoder=text_encoder))
 
     # build optimizer, learning rate scheduler
     trainable_params = filter(lambda p: p.requires_grad, model.parameters())
@@ -67,6 +78,7 @@ def main(config):
         logger=logger,
         batch_transforms=batch_transforms,
         skip_oom=config.trainer.get("skip_oom", True),
+        text_encoder=text_encoder,
     )
 
     trainer.train()

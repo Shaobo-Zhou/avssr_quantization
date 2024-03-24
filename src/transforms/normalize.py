@@ -1,9 +1,9 @@
 from torch import nn
 
 
-class Normalize1D(nn.Module):
+class Normalize(nn.Module):
     """
-    Batch-version of Normalize for 1D Input
+    Batch-version of Normalize
     """
 
     def __init__(self, mean, std):

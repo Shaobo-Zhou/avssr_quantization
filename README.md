@@ -1,4 +1,4 @@
-# PyTorch Template for DL projects
+# Audio-Visual Speech Separation and Recognition
 
 <p align="center">
   <a href="#about">About</a> •
@@ -61,6 +61,9 @@ To train the model, run the following command:
 ```bash
 python3 train.py --config_name=CONFIG_NAME # add optional Hydra parameters
 ```
+
+> [!NOTE]
+> For pipeline checking, you can download example dataset using `gdown 1ieOhhGkktegV29ct3xB-x69yDm58BENT` and unzip it into `data/example`.
 
 ## Credits
 

@@ -1,5 +1,5 @@
-from src.model.baseline_model import BaselineModel
+from src.model.example_model import ExampleModel
 
 __all__ = [
-    "BaselineModel",
+    "ExampleModel",
 ]
