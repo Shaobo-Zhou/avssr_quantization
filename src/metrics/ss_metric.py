@@ -1,5 +1,5 @@
 import torch
-from torchmetrics.audio import SignalDistortionRatio, ScaleInvariantSignalNoiseRatio
+from torchmetrics.audio import ScaleInvariantSignalNoiseRatio, SignalDistortionRatio
 from torchmetrics.audio.pesq import PerceptualEvaluationSpeechQuality
 from torchmetrics.audio.stoi import ShortTimeObjectiveIntelligibility
 
@@ -17,18 +17,24 @@ class SSMetric(BaseMetric):
         elif metric_type == "SI-SNRi":
             self.metric = ScaleInvariantSignalNoiseRatio().to(device)
         elif metric_type == "PESQ":
-            self.metric = PerceptualEvaluationSpeechQuality(fs=16000, mode="wb").to(device)
+            self.metric = PerceptualEvaluationSpeechQuality(fs=16000, mode="wb").to(
+                device
+            )
         elif metric_type == "STOI":
             self.metric = ShortTimeObjectiveIntelligibility(fs=16000).to(device)
         else:
             raise NotImplementedError()
-        
+
         self.metric_type = metric_type
 
     @torch.no_grad()
-    def __call__(self, s_audio: torch.Tensor, mix_audio: torch.Tensor, 
-                 predicted_audio: torch.Tensor, **kwargs):
-        
+    def __call__(
+        self,
+        s_audio: torch.Tensor,
+        mix_audio: torch.Tensor,
+        predicted_audio: torch.Tensor,
+        **kwargs
+    ):
         if self.metric_type == "PESQ" or self.metric_type == "STOI":
             return self.metric(predicted_audio, s_audio)
         else:

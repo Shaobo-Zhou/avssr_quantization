@@ -1,7 +1,5 @@
 import torch
-
 from torch.nn.modules.loss import _Loss
-
 
 # Based on
 ###
@@ -10,6 +8,7 @@ from torch.nn.modules.loss import _Loss
 # LastEditors: Kai Li
 # LastEditTime: 2021-07-14 18:04:26
 ###
+
 
 class PairwiseNegSDR(_Loss):
     def __init__(self, sdr_type, zero_mean=True, take_log=True, EPS=1e-8):
@@ -25,7 +24,9 @@ class PairwiseNegSDR(_Loss):
         targets = s_audio.unsqueeze(1)
 
         if targets.size() != ests.size() or targets.ndim != 3:
-            raise TypeError(f"Inputs must be of shape [batch, n_src, time], got {ests.size()} and {targets.size()} instead")
+            raise TypeError(
+                f"Inputs must be of shape [batch, n_src, time], got {ests.size()} and {targets.size()} instead"
+            )
         assert targets.size() == ests.size()
         # Step 1. Zero-mean norm
         if self.zero_mean:
@@ -51,10 +52,12 @@ class PairwiseNegSDR(_Loss):
         else:
             e_noise = s_estimate - pair_wise_proj
         # [batch, n_src, n_src]
-        pair_wise_sdr = torch.sum(pair_wise_proj**2, dim=3) / (torch.sum(e_noise**2, dim=3) + self.EPS)
+        pair_wise_sdr = torch.sum(pair_wise_proj**2, dim=3) / (
+            torch.sum(e_noise**2, dim=3) + self.EPS
+        )
         if self.take_log:
             pair_wise_sdr = 10 * torch.log10(pair_wise_sdr + self.EPS)
-        
+
         # Added because we do not use PIT
         pair_wise_sdr = pair_wise_sdr.mean()
         return -pair_wise_sdr

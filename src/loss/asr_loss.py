@@ -8,11 +8,17 @@ class ASRLoss(_Loss):
         super().__init__()
         self.loss = nn.CTCLoss(zero_infinity=True)
 
-    def forward(self, tokens_logits: torch.Tensor, s_tokens: torch.Tensor, 
-                s_tokens_length: torch.Tensor, s_audio_length: torch.Tensor, **batch):
+    def forward(
+        self,
+        tokens_logits: torch.Tensor,
+        s_tokens: torch.Tensor,
+        s_tokens_length: torch.Tensor,
+        s_audio_length: torch.Tensor,
+        **batch
+    ):
         log_probs = nn.functional.log_softmax(tokens_logits, dim=-1)
 
-        log_probs = log_probs.transpose(0, 1) # time first
+        log_probs = log_probs.transpose(0, 1)  # time first
 
         loss = self.loss(
             log_probs=log_probs,

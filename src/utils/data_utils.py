@@ -20,8 +20,9 @@ def get_dataloaders(config, text_encoder):
     dataloaders = {}
     for dataset_partition in config.datasets.keys():
         # dataset partitions init
-        dataset = instantiate(config.datasets[dataset_partition],
-                              text_encoder=text_encoder)  # instance transorms are defined inside
+        dataset = instantiate(
+            config.datasets[dataset_partition], text_encoder=text_encoder
+        )  # instance transorms are defined inside
 
         partition_dataloader = instantiate(
             config.dataloader,

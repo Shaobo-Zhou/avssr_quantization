@@ -1,15 +1,17 @@
+import multiprocessing
 import re
 from string import ascii_lowercase
-from src.utils.io_utils import ROOT_PATH
-from pyctcdecode import build_ctcdecoder
+
 import torch
-import multiprocessing
+from pyctcdecode import build_ctcdecoder
+
+from src.utils.io_utils import ROOT_PATH
+
 
 class CTCTextEncoder:
     EMPTY_TOK = ""
 
-    def __init__(self, alphabet = None,
-                 use_lm = False):
+    def __init__(self, alphabet=None, use_lm=False):
         """
         :param alphabet: alphabet for language. If None it will be set to ascii
         :param use_lm: whether to enable the support for Language Model Beam Search
@@ -27,7 +29,7 @@ class CTCTextEncoder:
 
         self.use_lm = use_lm
         if use_lm:
-            self.kenlm = ROOT_PATH / 'data' / 'lm' / 'librispeech'/ '4-gram.arpa'
+            self.kenlm = ROOT_PATH / "data" / "lm" / "librispeech" / "4-gram.arpa"
             self.lm_decoder = self._create_lm_decoder()
 
     def __len__(self):
@@ -41,9 +43,7 @@ class CTCTextEncoder:
 
         vocab = [elem.upper() for elem in vocab]
 
-        decoder = build_ctcdecoder(
-            vocab
-        )
+        decoder = build_ctcdecoder(vocab)
 
         return decoder
 
@@ -55,10 +55,7 @@ class CTCTextEncoder:
 
         vocab = [elem.upper() for elem in vocab]
 
-        decoder = build_ctcdecoder(
-            vocab,
-            kenlm_model_path=str(self.kenlm_path)
-        )
+        decoder = build_ctcdecoder(vocab, kenlm_model_path=str(self.kenlm_path))
 
         return decoder
 
@@ -86,28 +83,33 @@ class CTCTextEncoder:
             if char != self.EMPTY_TOK:
                 text.append(char)
             last_char = char
-        return ''.join(text).strip()
-    
+        return "".join(text).strip()
+
     def ctc_argmax(self, probs: torch.tensor, lengths: torch.tensor):
         """
-        Performs argmax ctc decode and returns 
+        Performs argmax ctc decode and returns
         lists of decoded texts.
         :param probs: probabilities from model with shape [N, L, H]
         :param lengths: tensor of shape [N,] containing lengthes without padding
         """
 
-        probs = torch.nn.functional.log_softmax(probs.detach().cpu(), -1) # to be sure
-        logits_list = [probs[i][:lengths[i]].numpy() for i in range(lengths.shape[0])]
+        probs = torch.nn.functional.log_softmax(probs.detach().cpu(), -1)  # to be sure
+        logits_list = [probs[i][: lengths[i]].numpy() for i in range(lengths.shape[0])]
 
         text_list = []
         for logits in logits_list:
             text_list.append(self.ctc_decode(logits.argmax(-1)))
         return text_list
 
-    def ctc_beam_search(self, probs: torch.tensor, lengths: torch.tensor,
-            beam_size: int = 100, use_lm=False):
+    def ctc_beam_search(
+        self,
+        probs: torch.tensor,
+        lengths: torch.tensor,
+        beam_size: int = 100,
+        use_lm=False,
+    ):
         """
-        Performs beam search (with or without language model) and returns 
+        Performs beam search (with or without language model) and returns
         list of decoded texts.
         :param probs: probabilities from model with shape [N, L, H]
         :param lengths: tensor of shape [N,] containing lengthes without padding
@@ -119,8 +121,8 @@ class CTCTextEncoder:
         else:
             decoder = self.bs_decoder
 
-        probs = torch.nn.functional.log_softmax(probs.detach().cpu(), -1) # to be sure
-        logits_list = [probs[i][:lengths[i]].numpy() for i in range(lengths.shape[0])]
+        probs = torch.nn.functional.log_softmax(probs.detach().cpu(), -1)  # to be sure
+        logits_list = [probs[i][: lengths[i]].numpy() for i in range(lengths.shape[0])]
 
         with multiprocessing.get_context("fork").Pool() as pool:
             text_list = decoder.decode_batch(pool, logits_list, beam_width=beam_size)
@@ -128,7 +130,7 @@ class CTCTextEncoder:
         text_list = [text.strip().lower() for text in text_list]
 
         return text_list
-    
+
     @staticmethod
     def normalize_text(text: str):
         text = text.lower()

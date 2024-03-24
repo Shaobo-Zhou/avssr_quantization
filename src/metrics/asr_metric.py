@@ -16,7 +16,7 @@ class ASRMetric(BaseMetric):
             self.metric = WordErrorRate().to(device)
         else:
             raise NotImplementedError()
-        
+
         self.text_encoder = text_encoder
         self.decode_type = decode_type
 
@@ -24,16 +24,22 @@ class ASRMetric(BaseMetric):
             self.beam_size = kwargs["beam_size"]
 
     @torch.no_grad()
-    def __call__(self, tokens_logits: torch.Tensor, 
-                 s_audio_length: torch.Tensor, s_text: list[str], **kwargs):
+    def __call__(
+        self,
+        tokens_logits: torch.Tensor,
+        s_audio_length: torch.Tensor,
+        s_text: list[str],
+        **kwargs
+    ):
         if self.decode_type == "argmax":
             text_list = self.text_encoder.ctc_argmax(tokens_logits, s_audio_length)
         elif self.decode_type == "beam_search":
-            text_list = self.text_encoder.ctc_beam_search(tokens_logits, s_audio_length,
-                                                          beam_size=self.beam_size, use_lm=False)
+            text_list = self.text_encoder.ctc_beam_search(
+                tokens_logits, s_audio_length, beam_size=self.beam_size, use_lm=False
+            )
         elif self.decode_type == "lm_beam_search":
-            text_list = self.text_encoder.ctc_beam_search(tokens_logits, s_audio_length,
-                                                          beam_size=self.beam_size, use_lm=True)
+            text_list = self.text_encoder.ctc_beam_search(
+                tokens_logits, s_audio_length, beam_size=self.beam_size, use_lm=True
+            )
 
         return self.metric(text_list, s_text)
-    

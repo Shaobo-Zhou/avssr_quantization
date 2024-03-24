@@ -1,6 +1,6 @@
+import pandas as pd
 import torch
 from tqdm import tqdm
-import pandas as pd
 
 from src.metrics.tracker import MetricTracker
 from src.trainer.base_trainer import BaseTrainer
@@ -58,7 +58,7 @@ class Trainer(BaseTrainer):
                 last_train_metrics = self.train_metrics.result()
                 self.train_metrics.reset()
             if batch_idx + 1 >= self.epoch_len:
-                self.log_text(batch) # log train text predictions for the final batch
+                self.log_text(batch)  # log train text predictions for the final batch
                 self.log_audio(batch)
                 break
 
@@ -122,23 +122,26 @@ class Trainer(BaseTrainer):
                 )
             self.writer.set_step(epoch * self.epoch_len, part)
             self._log_scalars(self.evaluation_metrics)
-            self.log_text(batch) # log predictions for the last batch
+            self.log_text(batch)  # log predictions for the last batch
             self.log_audio(batch)
 
         return self.evaluation_metrics.result()
-    
+
     def log_text(self, batch):
         tokens_logits = batch["tokens_logits"]
         s_audio_length = batch["s_audio_length"]
         target_text = batch["s_text"]
-        predicted_argmax_text = self.text_encoder.ctc_argmax(tokens_logits, s_audio_length)
-        predictes_bs_text = self.text_encoder.ctc_beam_search(tokens_logits, s_audio_length,
-                                                          beam_size=3, use_lm=False)
-        
+        predicted_argmax_text = self.text_encoder.ctc_argmax(
+            tokens_logits, s_audio_length
+        )
+        predictes_bs_text = self.text_encoder.ctc_beam_search(
+            tokens_logits, s_audio_length, beam_size=3, use_lm=False
+        )
+
         df_data = {
             "target_text": target_text,
             "argmax_text": predicted_argmax_text,
-            "bs_text_(bs_size=3)": predictes_bs_text
+            "bs_text_(bs_size=3)": predictes_bs_text,
         }
 
         df = pd.DataFrame(data=df_data)

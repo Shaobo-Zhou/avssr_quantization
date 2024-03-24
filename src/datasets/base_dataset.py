@@ -2,8 +2,8 @@ import logging
 import random
 from typing import List
 
-import torch
 import numpy as np
+import torch
 import torchaudio
 from torch.utils.data import Dataset
 
@@ -11,13 +11,22 @@ logger = logging.getLogger(__name__)
 
 
 class BaseDataset(Dataset):
-    def __init__(self, index, n_src=1, min_audio_length=32000,
-                 limit=None, instance_transforms=None, text_encoder=None):
+    def __init__(
+        self,
+        index,
+        n_src=1,
+        min_audio_length=32000,
+        limit=None,
+        instance_transforms=None,
+        text_encoder=None,
+    ):
         assert n_src == 1, "Currently only one target source is supported, set n_src=1"
         self._assert_index_is_valid(index, n_src)
-        assert text_encoder is not None, "For now you should always provide text_encoder"
+        assert (
+            text_encoder is not None
+        ), "For now you should always provide text_encoder"
 
-        self.n_src=n_src
+        self.n_src = n_src
 
         index = self._filter_records_from_dataset(index, min_audio_length)
         index = self._shuffle_and_limit_index(index, limit)
@@ -30,7 +39,7 @@ class BaseDataset(Dataset):
 
     def __getitem__(self, ind):
         data_dict = self._index[ind]
-        
+
         # n_src == 1 is only supported for now
         mix_audio = self.load_audio(data_dict["mix_path"])
         s_audio = self.load_audio(data_dict["s_path"])
@@ -59,7 +68,7 @@ class BaseDataset(Dataset):
     def load_audio(self, path):
         audio, sr = torchaudio.load(path)
         return audio
-    
+
     def load_video(self, path):
         video = np.load(path)["data"]
         video = torch.tensor(video, dtype=torch.float32) / 255
@@ -89,7 +98,7 @@ class BaseDataset(Dataset):
         )
 
         return index
-    
+
     @staticmethod
     def _sort_index(index):
         return sorted(index, key=lambda x: x["audio_length"])
@@ -116,8 +125,8 @@ class BaseDataset(Dataset):
                 )
             if n_src == 2:
                 assert "s1_path" in entry, (
-                "Each dataset item should include field 's1_path'"
-                " - path to s1 audio file."
+                    "Each dataset item should include field 's1_path'"
+                    " - path to s1 audio file."
                 )
                 assert "s1_video_path" in entry, (
                     "Each dataset item should include field 's1_video_path'"
@@ -135,7 +144,7 @@ class BaseDataset(Dataset):
                     "Each dataset item should include field 's2_video_path'"
                     " - path to s2 video file."
                 )
-                
+
                 assert "s2_text" in entry, (
                     "Each dataset item should include field 's2_text'"
                     " - str with s2 text."

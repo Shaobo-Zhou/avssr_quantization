@@ -17,14 +17,9 @@ class AVSSRLoss(_Loss):
         self.ss_coef = 1
 
     def forward(self, **batch):
-
         asr_loss = self.asr_loss(**batch)
         ss_loss = self.ss_loss(**batch)
 
         loss = self.asr_coef * asr_loss + self.ss_coef * ss_loss
 
-        return {
-            "loss": loss,
-            "asr_loss": asr_loss,
-            "ss_loss": ss_loss
-        }
+        return {"loss": loss, "asr_loss": asr_loss, "ss_loss": ss_loss}
