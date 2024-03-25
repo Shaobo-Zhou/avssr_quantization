@@ -49,9 +49,14 @@ class Trainer(BaseTrainer):
                         epoch, self._progress(batch_idx), batch["loss"].item()
                     )
                 )
+                # self.writer.add_scalar(
+                #     "learning rate", self.lr_scheduler.get_last_lr()[0]
+                # )
+                # bug if scheduler
                 self.writer.add_scalar(
-                    "learning rate", self.lr_scheduler.get_last_lr()[0]
+                    "learning rate", self.optimizer.param_groups[0]["lr"]
                 )
+
                 self._log_scalars(self.train_metrics)
                 # we don't want to reset train metrics at the start of every epoch
                 # because we are interested in recent train metrics
@@ -68,6 +73,9 @@ class Trainer(BaseTrainer):
         for part, dataloader in self.evaluation_dataloaders.items():
             val_log = self._evaluation_epoch(epoch, part, dataloader)
             log.update(**{f"{part}_{name}": value for name, value in val_log.items()})
+
+        if self.lr_scheduler is not None:
+            self.lr_scheduler.step(log[self.mnt_metric])
 
         return log
 
@@ -89,8 +97,6 @@ class Trainer(BaseTrainer):
             batch["loss"].backward()  # sum of all losses is always called loss
             self._clip_grad_norm()
             self.optimizer.step()
-            if self.lr_scheduler is not None:
-                self.lr_scheduler.step()
 
         # update metrics for each loss (in case of multiple losses)
         for loss_name in self.config.writer.loss_names:

@@ -1,5 +1,5 @@
 defaults:
-  - model: example
+  - model: ctcnet
   - writer: wandb
   - metrics: main
   - datasets: example

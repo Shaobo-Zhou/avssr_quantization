@@ -78,7 +78,7 @@ class ExampleModel(nn.Module):
             nn.Linear(in_features=fc_hidden, out_features=n_audio_feats),
         )
 
-        self.ctc_net = Sequential(
+        self.asr_net = Sequential(
             nn.Linear(2 * fc_hidden, fc_hidden),
             nn.ReLU(),
             nn.Linear(
@@ -95,7 +95,7 @@ class ExampleModel(nn.Module):
         feats = torch.cat([audio_feats, video_feats], dim=-1)
 
         predicted_audio = self.decoder(feats)
-        tokens_logits = self.ctc_net(feats)
+        tokens_logits = self.asr_net(feats)
 
         tokens_logits = tokens_logits.view(tokens_logits.shape[0], -1, self.n_tokens)
 
@@ -110,6 +110,11 @@ class ExampleModel(nn.Module):
         """
         Model prints with number of trainable parameters
         """
+
+        full_params = sum([np.prod(p.size()) for p in self.parameters()])
+
         model_parameters = filter(lambda p: p.requires_grad, self.parameters())
         params = sum([np.prod(p.size()) for p in model_parameters])
-        return super().__str__() + "\nTrainable parameters: {}".format(params)
+        return super().__str__() + "\nAll \ Trainable parameters: {} \ {}".format(
+            full_params, params
+        )
