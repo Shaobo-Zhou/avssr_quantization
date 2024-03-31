@@ -1,40 +1,41 @@
+device: auto
 train: []
 inference:
   - _target_: src.metrics.ASRMetric
     metric_type: CER
     decode_type: argmax
-    device: auto
+    device: ${metrics.device}
     name: "CER_(argmax)"
   - _target_: src.metrics.ASRMetric
     metric_type: WER
     decode_type: argmax
-    device: auto
+    device: ${metrics.device}
     name: "WER_(argmax)"
   - _target_: src.metrics.ASRMetric
     metric_type: CER
     decode_type: beam_search
-    device: auto
+    device: ${metrics.device}
     beam_size: 3
     name: "CER_(bs)"
   - _target_: src.metrics.ASRMetric
     metric_type: WER
     decode_type: beam_search
-    device: auto
+    device: ${metrics.device}
     beam_size: 3
     name: "WER_(bs)"
   - _target_: src.metrics.SSMetric
     metric_type: SDRi
-    device: auto
+    device: ${metrics.device}
     name: "SDRi"
   - _target_: src.metrics.SSMetric
     metric_type: "SI-SNRi"
-    device: auto
+    device: ${metrics.device}
     name: "SI-SNRi"
   - _target_: src.metrics.SSMetric
     metric_type: PESQ
-    device: auto
+    device: ${metrics.device}
     name: "PESQ"
   - _target_: src.metrics.SSMetric
     metric_type: STOI
-    device: auto
+    device: ${metrics.device}
     name: "STOI"

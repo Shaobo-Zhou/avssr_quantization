@@ -40,6 +40,6 @@ video_model:
 train_video_model: false
 asr_model_name: ASRExample
 asr_model_config:
-  n_input_feats: 3280
-  n_audio_feats: 32000
-  fc_hidden: 512
+  n_input_feats: 16
+  n_hidden_channels: 32
+  res_reduce: 627
