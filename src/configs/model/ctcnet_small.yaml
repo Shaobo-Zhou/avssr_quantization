@@ -43,3 +43,5 @@ asr_model_config:
   n_input_feats: 16
   n_hidden_channels: 32
   res_reduce: 627
+  input_channels: 1
+  n_repeats: 5

@@ -11,6 +11,10 @@ matplotlib
 pandas
 wandb
 hydra_core
+thop
+timm
+einops
+git+https://github.com/taolei87/sru.git
 
 black
 isort

@@ -3,21 +3,34 @@ from torch import nn
 
 class ASRExample(nn.Module):
     def __init__(
-        self, n_input_feats, n_hidden_channels, res_reduce, n_tokens, **kwargs
+        self,
+        input_channels,
+        n_repeats,
+        n_input_feats,
+        n_hidden_channels,
+        res_reduce,
+        n_tokens,
+        **kwargs
     ) -> None:
         super().__init__()
-        self.conv_part = nn.Sequential(
-            nn.Conv2d(1, n_hidden_channels, 4, 2, 1),
+        if n_repeats == 1:
+            n_hidden_channels = 1
+        conv_part = [
+            nn.Conv2d(input_channels, n_hidden_channels, 4, 2, 1),
             nn.ReLU(),
-            nn.Conv2d(n_hidden_channels, n_hidden_channels, 4, 2, 1),
-            nn.ReLU(),
-            nn.Conv2d(n_hidden_channels, n_hidden_channels, 4, 2, 1),
-            nn.ReLU(),
-            nn.Conv2d(n_hidden_channels, n_hidden_channels, 4, 2, 1),
-            nn.ReLU(),
-            nn.Conv2d(n_hidden_channels, 1, 4, 2, 1),
-            nn.ReLU(),
-        )
+        ]
+        for _ in range(n_repeats - 2):
+            conv_part.extend(
+                [nn.Conv2d(n_hidden_channels, n_hidden_channels, 4, 2, 1), nn.ReLU()]
+            )
+        if n_repeats >= 2:
+            conv_part.extend(
+                [
+                    nn.Conv2d(n_hidden_channels, 1, 4, 2, 1),
+                    nn.ReLU(),
+                ]
+            )
+        self.conv_part = nn.Sequential(*conv_part)
         self.fc_part = nn.Linear(n_input_feats, n_tokens)
 
         self.n_tokens = n_tokens

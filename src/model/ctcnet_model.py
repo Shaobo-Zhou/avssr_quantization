@@ -404,7 +404,7 @@ class CTCNetModel(BaseAVEncoderMaskerDecoder):
 
         reconstructed = pad_x_to_y(ests_wav, wav)
         predicted_audio = shape_reconstructed(reconstructed, shape)
-        predicted_audio = predicted_audio.squeeze(1)
+        predicted_audio = predicted_audio.squeeze(1)  # n_src=1
 
         tokens_logits, s_audio_length = self.asr_model(fused_feats, s_audio_length)
 
