@@ -217,19 +217,22 @@ class AudioVisual(nn.Module):
                 # print("fusion", i)
                 a, v = self.get_crossmodal_fusion(i)(a, v)
 
+        fused_feats = a  # av_fused feats
+
         # audio decoder
         for _ in range(self.fn_repeats):
             a = self.audio_block(self.audio_concat(res_a + a))
-        return a
+        return a, fused_feats
 
     def forward(self, a, v):
         # a: [4, 512, 3280], v: [4, 512, 50]
         B, _, T = a.size()
         a = self.pre_a(a)
         v = self.pre_v(v)
-        a = self.fuse(a, v)
+        a, fused_feats = self.fuse(a, v)
         a = self.post(a)
-        return a.view(B, self.n_src, self.out_chan, T)
+        a = a.view(B, self.n_src, self.out_chan, T)
+        return a, fused_feats
 
     def get_config(self):
         config = {
@@ -391,22 +394,24 @@ class CTCNetModel(BaseAVEncoderMaskerDecoder):
         wav = _unsqueeze_to_3d(mix_audio)
 
         if self.video_model is None:
-            fused_feats = self.av_forward(wav)
+            audio_feats, fused_feats = self.av_forward(wav)
         else:
             if not self.train_video_model:
                 with torch.no_grad():
                     mouth_emb = self.video_model(s_video)
             else:
                 mouth_emb = self.video_model(s_video)
-            fused_feats = self.av_forward(wav, mouth_emb)
+            audio_feats, fused_feats = self.av_forward(wav, mouth_emb)
 
-        ests_wav = self.forward_decoder(fused_feats)
+        ests_wav = self.forward_decoder(audio_feats)
 
         reconstructed = pad_x_to_y(ests_wav, wav)
         predicted_audio = shape_reconstructed(reconstructed, shape)
         predicted_audio = predicted_audio.squeeze(1)  # n_src=1
 
-        tokens_logits, s_audio_length = self.asr_model(fused_feats, s_audio_length)
+        tokens_logits, s_audio_length = self.asr_model(
+            fused_feats.unsqueeze(1), s_audio_length
+        )
 
         return {
             "predicted_audio": predicted_audio,
@@ -416,9 +421,13 @@ class CTCNetModel(BaseAVEncoderMaskerDecoder):
 
     def av_forward(self, wav, mouth_emb):
         enc_w = self.forward_encoder(wav)
-        masks = self.forward_masker(enc_w, mouth_emb)
+        masks, fused_feats = self.forward_masker(enc_w, mouth_emb)
 
-        return masks
+        return masks, fused_feats
+
+    def forward_masker(self, enc_w, mouth_emb):
+        audio_feats, fused_feats = self.masker(enc_w, mouth_emb)
+        return self.apply_masks(enc_w, audio_feats), fused_feats
 
     def __str__(self):
         """

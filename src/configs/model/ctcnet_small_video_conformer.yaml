@@ -16,7 +16,7 @@ bn_chan: 256 # as student
 hid_chan: 256 # as student
 # video
 vin_chan: 256 # as student
-vout_chan: 512 # 1024 as student, even more than before (because n_src=2)
+vout_chan: 1024 # 1024 as student, even more than before
 vconv_kernel_size: 3
 vn_repeats: 3 # as student, does not change anything?
 # fusion
@@ -33,15 +33,16 @@ video_config:
   kernel_size: 3
 video_model:
   _target_: src.model.video.VideoModel
-  backbone_type: resnet
+  backbone_type: shufflenet
   relu_type: prelu
-  width_mult: 1.0
-  pretrain: frcnn_128_512.backbone.pth.tar
+  width_mult: 0.5
+  pretrain: lrw_snv05x_tcn1x.pth.tar
 train_video_model: false
-asr_model_name: ASRExample
+asr_model_name: ASRConformer
 asr_model_config:
-  n_input_feats: 16
-  n_hidden_channels: 32
-  res_reduce: 313
-  input_channels: 1
-  n_repeats: 4
+  input_dim: 256
+  num_encoder_layers: 1
+  res_reduce: 125
+  conv_kernel_size: 7
+  encoder_dim: 64
+  do_subsample: false
