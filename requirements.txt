@@ -15,6 +15,9 @@ thop
 timm
 einops
 git+https://github.com/taolei87/sru.git
+wheel
+Cython
+nemo_toolkit[all]
 
 black
 isort

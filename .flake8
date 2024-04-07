@@ -1,5 +1,8 @@
 [flake8]
-exclude = .git,build
+exclude =
+    .git
+    build
+    scripts/forced_alignment/*
 ignore = E203, E266, E501, W503, F403, F401, C901, W605
 max-line-length = 100
 max-complexity = 18
