@@ -47,4 +47,4 @@ class ASRExample(nn.Module):
             s_audio_length // self.res_reduce
         )  # we changed the resolution to x self.res_reduce lower
 
-        return tokens_logits, s_audio_length
+        return {"tokens_logits": tokens_logits, "s_audio_length": s_audio_length}

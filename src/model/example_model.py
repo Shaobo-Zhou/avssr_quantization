@@ -111,10 +111,19 @@ class ExampleModel(nn.Module):
         Model prints with number of trainable parameters
         """
 
-        full_params = sum([np.prod(p.size()) for p in self.parameters()])
+        full_params = sum([p.numel() for p in self.parameters()])
+        video_params = sum([p.numel() for p in self.video_net.parameters()])
+        asr_params = sum([p.numel() for p in self.asr_net.parameters()])
+        ss_params = full_params - video_params - asr_params
 
         model_parameters = filter(lambda p: p.requires_grad, self.parameters())
-        params = sum([np.prod(p.size()) for p in model_parameters])
-        return super().__str__() + "\nAll \ Trainable parameters: {} \ {}".format(
-            full_params, params
-        )
+        params = sum([p.numel() for p in model_parameters])
+
+        result_str = super().__str__()
+        result_str = result_str + "\nAll parameters: {}".format(full_params)
+        result_str = result_str + "\nVideo parameters: {}".format(video_params)
+        result_str = result_str + "\nASR parameters: {}".format(asr_params)
+        result_str = result_str + "\nSS parameters: {}".format(ss_params)
+        result_str = result_str + "\nTrainable parameters: {}".format(params)
+
+        return result_str

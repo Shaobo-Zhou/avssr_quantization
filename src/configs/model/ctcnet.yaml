@@ -1,36 +1,38 @@
-_target_: src.model.CTCNetModel
-# sample_rate: 16000
-# filterbank
-n_filters: 512
-kernel_size: 21
-stride: 10
-# masknet
-n_src: 1
-n_blocks: 8
-an_repeats: 3
-fn_repeats: 13
-mask_act: relu
-act_type: prelu
-norm_type: gLN
-bn_chan: 512
-hid_chan: 512
-# video
-vin_chan: 512
-vout_chan: 512
-vconv_kernel_size: 3
-vn_repeats: 5
-# fusion
-fout_chan: 512
-# video frcnn
-video_config:
-  in_chan: 64
-  out_chan: 64
-  depth: 4
-  iter: 3
-  shared: True # in original config it is false
-  norm_type: "BatchNorm1d"
-  act_type: "prelu"
-  kernel_size: 3
+_target_: src.model.AVSSRModel
+ss_model:
+  _target_: src.model.ctcnet.CTCNet
+  # sample_rate: 16000
+  # filterbank
+  n_filters: 512
+  kernel_size: 21
+  stride: 10
+  # masknet
+  n_src: 1
+  n_blocks: 8
+  an_repeats: 3
+  fn_repeats: 13
+  mask_act: relu
+  act_type: prelu
+  norm_type: gLN
+  bn_chan: 512
+  hid_chan: 512
+  # video
+  vin_chan: 512
+  vout_chan: 512
+  vconv_kernel_size: 3
+  vn_repeats: 5
+  # fusion
+  fout_chan: 512
+  # video frcnn
+  video_config:
+    in_chan: 64
+    out_chan: 64
+    depth: 4
+    iter: 3
+    shared: True # in original config it is false
+    norm_type: "BatchNorm1d"
+    act_type: "prelu"
+    kernel_size: 3
 video_model:
   _target_: src.model.video.VideoModel
   backbone_type: resnet
@@ -38,8 +40,8 @@ video_model:
   width_mult: 1.0
   pretrain: frcnn_128_512.backbone.pth.tar
 train_video_model: false
-asr_model_name: ASRExample
-asr_model_config:
+asr_model:
+  _target_: src.model.asr.ASRExample
   n_input_feats: 16
   n_hidden_channels: 32
   res_reduce: 313

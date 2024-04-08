@@ -1,18 +1,10 @@
-import numpy as np
 import torch
 
-import src.model.asr as asr_module
-from src.model.rtfsnet.layers import ConvNormAct
-from src.model.rtfsnet.TDAVNet import (
-    BaseAVModel,
-    RefinementModule,
-    decoder,
-    encoder,
-    mask_generator,
-)
+from .layers import ConvNormAct
+from .TDAVNet import BaseAVModel, RefinementModule, decoder, encoder, mask_generator
 
 
-class RTFSNetModel(BaseAVModel):
+class RTFSNet(BaseAVModel):
     def __init__(
         self,
         n_src: int,
@@ -24,17 +16,11 @@ class RTFSNetModel(BaseAVModel):
         video_bn_params: dict = dict(),
         video_params: dict = dict(),
         fusion_params: dict = dict(),
-        print_macs: bool = False,
-        # video_model
-        video_model=None,
-        train_video_model=False,
-        # asr_model
-        asr_model_name=None,
-        asr_model_config=None,
-        n_tokens=None,
+        print_macs: bool = True,
+        *args,
         **kwargs,
     ):
-        super(RTFSNetModel, self).__init__()
+        super().__init__()
 
         self.n_src = n_src
         self.pretrained_vout_chan = pretrained_vout_chan
@@ -56,12 +42,6 @@ class RTFSNetModel(BaseAVModel):
         )
 
         self.init_modules()
-
-        self.video_model = video_model
-        self.asr_model = getattr(asr_module, asr_model_name)(
-            n_tokens=n_tokens, **asr_model_config
-        )
-        self.train_video_model = train_video_model
 
     def init_modules(self):
         self.enc_out_chan = self.encoder.get_out_chan()
@@ -110,38 +90,9 @@ class RTFSNetModel(BaseAVModel):
         if self.print_macs:
             self.get_MACs()
 
-    def forward(self, mix_audio, s_video, s_audio_length, **batch):
-        if self.video_model is None:
-            refined_features, audio_mixture_embedding = self.av_forward(mix_audio)
-        else:
-            if not self.train_video_model:
-                with torch.no_grad():
-                    mouth_emb = self.video_model(s_video)
-            else:
-                mouth_emb = self.video_model(s_video)
-            refined_features, audio_mixture_embedding = self.av_forward(
-                mix_audio, mouth_emb
-            )
-
-        # decoder part
-        separated_audio_embeddings = self.mask_generator(
-            refined_features, audio_mixture_embedding
-        )  # B, n_src, N, T, (F)
-        separated_audios = self.decoder(
-            separated_audio_embeddings, mix_audio.shape
-        )  # B, n_src, L
-
-        separated_audios = separated_audios.squeeze(1)  # n_src=1
-        # asr part
-        tokens_logits, s_audio_length = self.asr_model(refined_features, s_audio_length)
-
-        return {
-            "predicted_audio": separated_audios,
-            "tokens_logits": tokens_logits,
-            "s_audio_length": s_audio_length,
-        }
-
-    def av_forward(self, audio_mixture, mouth_embedding):
+    def forward(
+        self, audio_mixture: torch.Tensor, mouth_embedding: torch.Tensor = None
+    ):
         audio_mixture_embedding = self.encoder(audio_mixture)  # B, 1, L -> B, N, T, (F)
 
         audio = self.audio_bottleneck(audio_mixture_embedding)  # B, C, T, (F)
@@ -151,29 +102,20 @@ class RTFSNetModel(BaseAVModel):
 
         refined_features = self.refinement_module(audio, video)  # B, C, T, (F)
 
-        return refined_features, audio_mixture_embedding
+        separated_audio_embeddings = self.mask_generator(
+            refined_features, audio_mixture_embedding
+        )  # B, n_src, N, T, (F)
+        separated_audios = self.decoder(
+            separated_audio_embeddings, audio_mixture.shape
+        )  # B, n_src, L
 
-    def __str__(self):
-        """
-        Model prints with number of trainable parameters
-        """
+        predicted_audio = separated_audios.squeeze(1)
+        fused_feats = refined_features
 
-        full_params = sum([np.prod(p.size()) for p in self.parameters()])
-        video_params = sum([np.prod(p.size()) for p in self.video_model.parameters()])
-        asr_params = sum([np.prod(p.size()) for p in self.asr_model.parameters()])
-        ss_params = full_params - video_params - asr_params
-
-        model_parameters = filter(lambda p: p.requires_grad, self.parameters())
-        params = sum([np.prod(p.size()) for p in model_parameters])
-
-        result_str = super().__str__()
-        result_str = result_str + "\nAll parameters: {}".format(full_params)
-        result_str = result_str + "\nVideo parameters: {}".format(video_params)
-        result_str = result_str + "\nASR parameters: {}".format(asr_params)
-        result_str = result_str + "\nSS parameters: {}".format(ss_params)
-        result_str = result_str + "\nTrainable parameters: {}".format(params)
-
-        return result_str
+        return {
+            "predicted_audio": predicted_audio,
+            "fused_feats": fused_feats,
+        }
 
     def get_config(self):
         model_args = {}

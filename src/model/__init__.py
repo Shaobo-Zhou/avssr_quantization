@@ -1,3 +1,2 @@
-from src.model.ctcnet_model import CTCNetModel
+from src.model.avssr_model import AVSSRModel
 from src.model.example_model import ExampleModel
-from src.model.rtfsnet_model import RTFSNetModel

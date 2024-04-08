@@ -54,4 +54,4 @@ class ASRConformer(nn.Module):
         tokens_logits = self.fc(encoder_output)
         # tokens_logits = tokens_logits.view(tokens_logits.shape[0], -1, self.n_tokens)
 
-        return tokens_logits, s_audio_length
+        return {"tokens_logits": tokens_logits, "s_audio_length": s_audio_length}

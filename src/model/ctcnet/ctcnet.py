@@ -9,12 +9,10 @@ import inspect
 import math
 import warnings
 
-import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-import src.model.asr as asr_module
 from src.model.ctcnet.base_av_model import BaseAVEncoderMaskerDecoder, _unsqueeze_to_3d
 from src.model.ctcnet.layers import (
     AudioSubnetwork,
@@ -256,42 +254,7 @@ class AudioVisual(nn.Module):
         return config
 
 
-class _Padder(nn.Module):
-    def __init__(self, encoder, upsampling_depth=4, kernel_size=21):
-        super().__init__()
-        self.encoder = encoder
-        self.upsampling_depth = upsampling_depth
-        self.kernel_size = kernel_size
-
-        # Appropriate padding is needed for arbitrary lengths
-        self.lcm = abs(self.kernel_size // 2 * 2**self.upsampling_depth) // math.gcd(
-            self.kernel_size // 2, 2**self.upsampling_depth
-        )
-
-        # For serialize
-        self.filterbank = self.encoder.filterbank
-        self.sample_rate = getattr(self.encoder.filterbank, "sample_rate", None)
-
-    def forward(self, x):
-        x = pad(x, self.lcm)
-        return self.encoder(x)
-
-
-def pad(x, lcm: int):
-    values_to_pad = int(x.shape[-1]) % lcm
-    if values_to_pad:
-        appropriate_shape = x.shape
-        padding = torch.zeros(
-            list(appropriate_shape[:-1]) + [lcm - values_to_pad],
-            dtype=x.dtype,
-            device=x.device,
-        )
-        padded_x = torch.cat([x, padding], dim=-1)
-        return padded_x
-    return x
-
-
-class CTCNetModel(BaseAVEncoderMaskerDecoder):
+class CTCNet(BaseAVEncoderMaskerDecoder):
     """
     wav         --> [encoder] ----> [*] --> [decoder] -> [reshape] ->
          \                         /
@@ -317,13 +280,6 @@ class CTCNetModel(BaseAVEncoderMaskerDecoder):
         vout_chan=256,
         vconv_kernel_size=3,
         vn_repeats=5,
-        # video_model
-        video_model=None,
-        train_video_model=False,
-        # asr_model
-        asr_model_name=None,
-        asr_model_config=None,
-        n_tokens=None,
         # fusion
         fout_chan=256,
         # enc_dec
@@ -383,70 +339,61 @@ class CTCNetModel(BaseAVEncoderMaskerDecoder):
             encoder, masker, decoder, encoder_activation=encoder_activation
         )
 
-        self.video_model = video_model
-        self.asr_model = getattr(asr_module, asr_model_name)(
-            n_tokens=n_tokens, **asr_model_config
-        )
-        self.train_video_model = train_video_model
+    def forward(self, wav, mouth_emb):
+        shape = wav.shape
+        wav = _unsqueeze_to_3d(wav)
 
-    def forward(self, mix_audio, s_video, s_audio_length, **batch):
-        shape = mix_audio.shape
-        wav = _unsqueeze_to_3d(mix_audio)
-
-        if self.video_model is None:
-            audio_feats, fused_feats = self.av_forward(wav)
-        else:
-            if not self.train_video_model:
-                with torch.no_grad():
-                    mouth_emb = self.video_model(s_video)
-            else:
-                mouth_emb = self.video_model(s_video)
-            audio_feats, fused_feats = self.av_forward(wav, mouth_emb)
-
-        ests_wav = self.forward_decoder(audio_feats)
+        enc_w = self.forward_encoder(wav)
+        masks, fused_feats = self.forward_masker(enc_w, mouth_emb)
+        ests_wav = self.forward_decoder(masks)
 
         reconstructed = pad_x_to_y(ests_wav, wav)
         predicted_audio = shape_reconstructed(reconstructed, shape)
-        predicted_audio = predicted_audio.squeeze(1)  # n_src=1
 
-        tokens_logits, s_audio_length = self.asr_model(
-            fused_feats.unsqueeze(1), s_audio_length
-        )
+        # fix shapes
+        fused_feats = fused_feats.unsqueeze(1)
+        predicted_audio = predicted_audio.squeeze(1)
 
         return {
             "predicted_audio": predicted_audio,
-            "tokens_logits": tokens_logits,
-            "s_audio_length": s_audio_length,
+            "fused_feats": fused_feats,
         }
-
-    def av_forward(self, wav, mouth_emb):
-        enc_w = self.forward_encoder(wav)
-        masks, fused_feats = self.forward_masker(enc_w, mouth_emb)
-
-        return masks, fused_feats
 
     def forward_masker(self, enc_w, mouth_emb):
         audio_feats, fused_feats = self.masker(enc_w, mouth_emb)
         return self.apply_masks(enc_w, audio_feats), fused_feats
 
-    def __str__(self):
-        """
-        Model prints with number of trainable parameters
-        """
 
-        full_params = sum([np.prod(p.size()) for p in self.parameters()])
-        video_params = sum([np.prod(p.size()) for p in self.video_model.parameters()])
-        asr_params = sum([np.prod(p.size()) for p in self.asr_model.parameters()])
-        ss_params = full_params - video_params - asr_params
+class _Padder(nn.Module):
+    def __init__(self, encoder, upsampling_depth=4, kernel_size=21):
+        super().__init__()
+        self.encoder = encoder
+        self.upsampling_depth = upsampling_depth
+        self.kernel_size = kernel_size
 
-        model_parameters = filter(lambda p: p.requires_grad, self.parameters())
-        params = sum([np.prod(p.size()) for p in model_parameters])
+        # Appropriate padding is needed for arbitrary lengths
+        self.lcm = abs(self.kernel_size // 2 * 2**self.upsampling_depth) // math.gcd(
+            self.kernel_size // 2, 2**self.upsampling_depth
+        )
 
-        result_str = super().__str__()
-        result_str = result_str + "\nAll parameters: {}".format(full_params)
-        result_str = result_str + "\nVideo parameters: {}".format(video_params)
-        result_str = result_str + "\nASR parameters: {}".format(asr_params)
-        result_str = result_str + "\nSS parameters: {}".format(ss_params)
-        result_str = result_str + "\nTrainable parameters: {}".format(params)
+        # For serialize
+        self.filterbank = self.encoder.filterbank
+        self.sample_rate = getattr(self.encoder.filterbank, "sample_rate", None)
 
-        return result_str
+    def forward(self, x):
+        x = pad(x, self.lcm)
+        return self.encoder(x)
+
+
+def pad(x, lcm: int):
+    values_to_pad = int(x.shape[-1]) % lcm
+    if values_to_pad:
+        appropriate_shape = x.shape
+        padding = torch.zeros(
+            list(appropriate_shape[:-1]) + [lcm - values_to_pad],
+            dtype=x.dtype,
+            device=x.device,
+        )
+        padded_x = torch.cat([x, padding], dim=-1)
+        return padded_x
+    return x

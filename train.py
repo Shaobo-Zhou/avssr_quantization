@@ -5,6 +5,7 @@ import hydra
 import numpy as np
 import torch
 from hydra.utils import instantiate
+from omegaconf import OmegaConf
 
 from src.trainer import Trainer
 from src.utils.data_utils import get_dataloaders
@@ -41,20 +42,25 @@ def main(config):
     dataloaders, batch_transforms = get_dataloaders(config, text_encoder)
 
     # build model architecture, then print to console
+    OmegaConf.set_struct(config, False)
+    if config.model.get("asr_model") is not None:
+        # change n_tokens
+        config.model.asr_model.n_tokens = len(text_encoder)
+    OmegaConf.set_struct(config, True)
+
     model = instantiate(config.model, n_tokens=len(text_encoder)).to(device)
     logger.info(model)
 
     # get function handles of loss and metrics
     loss_function = instantiate(config.loss_function).to(device)
 
-    metrics = {
-        "train": [],
-        "inference": []
-    }
+    metrics = {"train": [], "inference": []}
     for metric_config in config.metrics.train:
         metrics["train"].append(instantiate(metric_config, text_encoder=text_encoder))
     for metric_config in config.metrics.inference:
-        metrics["inference"].append(instantiate(metric_config, text_encoder=text_encoder))
+        metrics["inference"].append(
+            instantiate(metric_config, text_encoder=text_encoder)
+        )
 
     # build optimizer, learning rate scheduler
     trainable_params = filter(lambda p: p.requires_grad, model.parameters())
