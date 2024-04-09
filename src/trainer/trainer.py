@@ -4,7 +4,6 @@ from tqdm import tqdm
 
 from src.metrics.tracker import MetricTracker
 from src.trainer.base_trainer import BaseTrainer
-from src.utils.data_utils import inf_loop
 
 
 class Trainer(BaseTrainer):

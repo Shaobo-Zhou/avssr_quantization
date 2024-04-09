@@ -357,11 +357,16 @@ class CTCNet(BaseAVEncoderMaskerDecoder):
         return {
             "predicted_audio": predicted_audio,
             "fused_feats": fused_feats,
+            "kd_embedding": masks,
         }
 
     def forward_masker(self, enc_w, mouth_emb):
         audio_feats, fused_feats = self.masker(enc_w, mouth_emb)
         return self.apply_masks(enc_w, audio_feats), fused_feats
+
+    def init_from(self, path):
+        checkpoint = torch.load(path)
+        self.load_state_dict(checkpoint["state_dict"])
 
 
 class _Padder(nn.Module):

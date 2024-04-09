@@ -2,4 +2,4 @@ project_name: "avssr"
 entity: null
 run_name: "testing"
 mode: "online"
-loss_names: ["loss", "asr_loss", "ss_loss"] # which losses to log (useful for multi-loss tasks, s.a. GANs)
+loss_names: ["loss", "asr_loss", "ss_loss", "kd_loss"] # which losses to log (useful for multi-loss tasks, s.a. GANs)

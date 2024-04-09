@@ -56,14 +56,30 @@ Follow these steps to work with the project:
 
 ## Experiments
 
+> [!NOTE]
+> For pipeline checking, you can download example dataset using `gdown 1ieOhhGkktegV29ct3xB-x69yDm58BENT` and unzip it into `data/example`.
+
+### Training
+
 To train the model, run the following command:
 
 ```bash
 python3 train.py --config_name=CONFIG_NAME # add optional Hydra parameters
 ```
 
-> [!NOTE]
-> For pipeline checking, you can download example dataset using `gdown 1ieOhhGkktegV29ct3xB-x69yDm58BENT` and unzip it into `data/example`.
+### Saving Embeddings for Knowledge Distillation
+
+To save embeddings from pre-trained model, run the following command:
+
+```bash
+python3 save_embeddings.py model=MODEL_THAT_YOU_WANT
+```
+
+Here is an example for CTCNet:
+
+```bash
+python3 save_embeddings.py model=ctcnet +model.ss_pretrain_path="ctcnet/lrs2_best_model.pt" model.ss_model.video_config.shared=False saver.save_key=kd_embedding
+```
 
 ## Credits
 

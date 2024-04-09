@@ -6,7 +6,8 @@ train:
   video_path: mouth
   text_path: text
   n_src: 1
-  instance_transforms: ${transforms.instance_transforms.inference}
+  distillation: True
+  instance_transforms: ${transforms.instance_transforms.train}
 val:
   _target_: src.datasets.AVDataset
   dataset_name: example
@@ -15,4 +16,5 @@ val:
   video_path: mouth
   text_path: text
   n_src: 1
+  distillation: True
   instance_transforms: ${transforms.instance_transforms.inference}

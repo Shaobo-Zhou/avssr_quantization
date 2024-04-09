@@ -7,6 +7,8 @@ import torch
 import torchaudio
 from torch.utils.data import Dataset
 
+from src.utils.io_utils import ROOT_PATH
+
 logger = logging.getLogger(__name__)
 
 
@@ -19,6 +21,7 @@ class BaseDataset(Dataset):
         limit=None,
         instance_transforms=None,
         text_encoder=None,
+        distillation=False,
     ):
         assert n_src == 1, "Currently only one target source is supported, set n_src=1"
         self._assert_index_is_valid(index, n_src)
@@ -37,6 +40,8 @@ class BaseDataset(Dataset):
 
         self.text_encoder = text_encoder
 
+        self.distillation = distillation
+
     def __getitem__(self, ind):
         data_dict = self._index[ind]
 
@@ -46,6 +51,8 @@ class BaseDataset(Dataset):
         s_video = self.load_video(data_dict["s_video_path"])
         s_text = data_dict["s_text"]
         s_tokens = self.text_encoder.encode(s_text)
+        mix_s_id = data_dict["mix_s_id"]
+        embedding_path = data_dict["embedding_s_path"]
         s_audio_length = data_dict["audio_length"]
 
         s_audio, s_video = self.process_data(s_audio, s_video)
@@ -58,12 +65,23 @@ class BaseDataset(Dataset):
             "s_tokens": s_tokens,
             "s_tokens_length": s_tokens.shape[0],
             "s_audio_length": s_audio_length,
+            "mix_s_id": mix_s_id,
         }
+
+        if self.distillation:
+            # target kd_embedding
+            result_dict["t_kd_embedding"] = self.load_embedding(embedding_path)
+        else:
+            result_dict["t_kd_embedding"] = torch.zeros(1)  # dummy thing for collate
 
         return result_dict
 
     def __len__(self):
         return len(self._index)
+
+    def load_embedding(self, path):
+        embedding = torch.load(path)
+        return embedding
 
     def load_audio(self, path):
         audio, sr = torchaudio.load(path)

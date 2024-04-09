@@ -1,6 +1,8 @@
 import torch
 from torch import nn
 
+from src.utils.io_utils import ROOT_PATH
+
 
 class AVSSRModel(nn.Module):
     """
@@ -13,7 +15,8 @@ class AVSSRModel(nn.Module):
         video_model,  # ResNet18 or ShuffleNet
         asr_model,  # model from src.model.asr
         train_video_model=False,
-        **kwargs
+        ss_pretrain_path=None,
+        **kwargs,
     ) -> None:
         super().__init__()
 
@@ -21,6 +24,11 @@ class AVSSRModel(nn.Module):
         self.video_model = video_model
         self.asr_model = asr_model
         self.train_video_model = train_video_model
+
+        if ss_pretrain_path is not None:
+            ss_pretrain_path = str(ROOT_PATH / "data" / "pretrain" / ss_pretrain_path)
+            print(f"Loading SS weights from {ss_pretrain_path}...")
+            self.ss_model.init_from(ss_pretrain_path)
 
     def forward(self, mix_audio, s_video, s_audio_length, **batch):
         # get predicted_audio, fused_features, etc.
