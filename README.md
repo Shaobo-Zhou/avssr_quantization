@@ -50,8 +50,15 @@ Follow these steps to work with the project:
    ```
 
 2. Install `pre-commit`:
+
    ```bash
    pre-commit install
+   ```
+
+3. download pretrained models:
+
+   ```bash
+   python3 scripts/get_pretrain.py
    ```
 
 ## Experiments
