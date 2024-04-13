@@ -10,7 +10,7 @@ tqdm
 matplotlib
 pandas
 wandb
-hydra_core
+hydra-core
 thop
 timm
 einops

@@ -10,7 +10,8 @@ To align the text run the following code:
 python3 create_manifest.py \
 	--dataset_name=DATASET_NAME \
 	--audio_path=AUDIO_PATH_IN_DATASET_DIR \
-	--text_path=TEXT_PATH_IN_DATASET_DIR
+	--text_path=TEXT_PATH_IN_DATASET_DIR \
+	--use_asr=False # set to True if you do not have ground truth text
 
 # use NeMo FA to align audio with text
 # for pretrained_name any NeMo ASR CTC or Hybrid model can be used
@@ -24,7 +25,8 @@ python3 align.py \
   	ass_file_config.text_already_spoken_rgb=[66,245,212] \
   	ass_file_config.text_being_spoken_rgb=[242,222,44] \
   	ass_file_config.text_not_yet_spoken_rgb=[223,242,239] \
-  	ctm_file_config.remove_blank_tokens=True
+  	ctm_file_config.remove_blank_tokens=True \
+	align_using_pred_text=False # set to True if you do not have ground truth text
 
 # crop text to SECONDS
 python3 crop_text.py --dataset_name=DATASET_NAME --seconds=SECONDS
