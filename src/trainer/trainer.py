@@ -20,6 +20,7 @@ class Trainer(BaseTrainer):
         """
         self.is_train = True
         self.model.train()
+        self.criterion.set_ss_mode("train")
         self.train_metrics.reset()
         self.writer.add_scalar("epoch", epoch)
         for batch_idx, batch in enumerate(
@@ -27,8 +28,7 @@ class Trainer(BaseTrainer):
         ):
             try:
                 batch = self.process_batch(
-                    batch,
-                    metrics=self.train_metrics,
+                    batch, metrics=self.train_metrics, part="train"
                 )
             except torch.cuda.OutOfMemoryError as e:
                 if self.skip_oom:
@@ -78,13 +78,11 @@ class Trainer(BaseTrainer):
 
         return log
 
-    def process_batch(self, batch, metrics: MetricTracker):
+    def process_batch(self, batch, metrics: MetricTracker, part: str):
         batch = self.move_batch_to_device(batch)
         batch = self.transform_batch(batch)  # transform batch on device -- faster
 
-        metric_funcs = self.metrics["inference"]
         if self.is_train:
-            metric_funcs = self.metrics["train"]
             self.optimizer.zero_grad()
         outputs = self.model(**batch)
         batch.update(outputs)
@@ -101,7 +99,7 @@ class Trainer(BaseTrainer):
         for loss_name in self.config.writer.loss_names:
             metrics.update(loss_name, batch[loss_name].item())
 
-        for met in metric_funcs:
+        for met in self.metrics[part]:
             metrics.update(met.name, met(**batch))
         return batch
 
@@ -114,7 +112,8 @@ class Trainer(BaseTrainer):
         """
         self.is_train = False
         self.model.eval()
-        self.evaluation_metrics.reset()
+        self.criterion.set_ss_mode("inference")
+        self.evaluation_metrics[part].reset()
         with torch.no_grad():
             for batch_idx, batch in tqdm(
                 enumerate(dataloader),
@@ -122,15 +121,14 @@ class Trainer(BaseTrainer):
                 total=len(dataloader),
             ):
                 batch = self.process_batch(
-                    batch,
-                    metrics=self.evaluation_metrics,
+                    batch, metrics=self.evaluation_metrics[part], part=part
                 )
             self.writer.set_step(epoch * self.epoch_len, part)
-            self._log_scalars(self.evaluation_metrics)
+            self._log_scalars(self.evaluation_metrics[part])
             self.log_text(batch)  # log predictions for the last batch
             self.log_audio(batch)
 
-        return self.evaluation_metrics.result()
+        return self.evaluation_metrics[part].result()
 
     def log_text(self, batch):
         tokens_logits = batch["tokens_logits"]

@@ -23,14 +23,14 @@ text_encoder:
   _target_: src.text_encoder.CTCTextEncoder
 trainer:
   log_step: 50
-  n_epochs: 100
+  n_epochs: 200
   epoch_len: 100
   max_grad_norm: 5
   device_tensors: ["mix_audio", "s_audio", "s_video", "s_tokens_length", "s_audio_length"] # which tensors should be on device (ex. GPU)
   resume_from: null # null or path to the checkpoint dir with *.pth and config.yaml
   device: auto # device name or "auto"
   override: False # if True, will override the previous run with the same name
-  monitor: "max val_SI-SNRi" # "off" or "max/min metric_name", i.e. our goal is to maximize/minimize metric
+  monitor: "min val_ss_loss" # "off" or "max/min metric_name", i.e. our goal is to maximize/minimize metric
   save_period: 5 # checkpoint each save_period epochs in addition to the best epoch
   early_stop: ${trainer.n_epochs} # epochs for early stopping
   save_dir: "saved"

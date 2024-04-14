@@ -1,6 +1,7 @@
 device: auto
 train: []
-inference:
+val: []
+test:
   - _target_: src.metrics.ASRMetric
     metric_type: CER
     decode_type: argmax

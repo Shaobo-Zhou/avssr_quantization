@@ -16,3 +16,12 @@ val:
   text_path: text
   n_src: 1
   instance_transforms: ${transforms.instance_transforms.inference}
+test:
+  _target_: src.datasets.AVDataset
+  dataset_name: example
+  name: cv
+  audio_path: audio
+  video_path: mouth
+  text_path: text
+  n_src: 1
+  instance_transforms: ${transforms.instance_transforms.inference}

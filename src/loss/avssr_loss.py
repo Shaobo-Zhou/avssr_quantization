@@ -11,16 +11,26 @@ class AVSSRLoss(_Loss):
         super().__init__()
 
         self.asr_loss = ASRLoss()
-        self.ss_loss = PairwiseNegSDR(sdr_type="snr")
+        self.train_ss_loss = PairwiseNegSDR(sdr_type="snr")
+        self.inference_ss_loss = PairwiseNegSDR(sdr_type="sisdr")
         self.kd_loss = nn.L1Loss()
 
         self.asr_coef = asr_coef
         self.ss_coef = ss_coef
         self.kd_coef = kd_coef
 
+        self.ss_mode = "train"
+
+    def set_ss_mode(self, mode):
+        self.ss_mode = mode
+
     def forward(self, **batch):
         asr_loss = self.asr_loss(**batch)
-        ss_loss = self.ss_loss(**batch)
+
+        if self.ss_mode == "train":
+            ss_loss = self.train_ss_loss(**batch)
+        else:
+            ss_loss = self.inference_ss_loss(**batch)
 
         loss = self.asr_coef * asr_loss + self.ss_coef * ss_loss
 

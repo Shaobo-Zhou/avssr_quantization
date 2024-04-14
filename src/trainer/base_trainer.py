@@ -99,11 +99,18 @@ class BaseTrainer:
             *[m.name for m in self.metrics["train"]],
             writer=self.writer,
         )
-        self.evaluation_metrics = MetricTracker(
+        val_metrics = MetricTracker(
             *self.config.writer.loss_names,
-            *[m.name for m in self.metrics["inference"]],
+            *[m.name for m in self.metrics["val"]],
             writer=self.writer,
         )
+        test_metrics = MetricTracker(
+            *self.config.writer.loss_names,
+            *[m.name for m in self.metrics["test"]],
+            writer=self.writer,
+        )
+
+        self.evaluation_metrics = {"val": val_metrics, "test": test_metrics}
 
         # define checkpoint dir and init everything if required
 

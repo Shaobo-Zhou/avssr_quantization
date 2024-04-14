@@ -54,13 +54,12 @@ def main(config):
     # get function handles of loss and metrics
     loss_function = instantiate(config.loss_function).to(device)
 
-    metrics = {"train": [], "inference": []}
-    for metric_config in config.metrics.train:
-        metrics["train"].append(instantiate(metric_config, text_encoder=text_encoder))
-    for metric_config in config.metrics.inference:
-        metrics["inference"].append(
-            instantiate(metric_config, text_encoder=text_encoder)
-        )
+    metrics = {"train": [], "val": [], "test": []}
+    for metric_type in ["train", "val", "test"]:
+        for metric_config in config.metrics.get(metric_type, []):
+            metrics[metric_type].append(
+                instantiate(metric_config, text_encoder=text_encoder)
+            )
 
     # build optimizer, learning rate scheduler
     trainable_params = filter(lambda p: p.requires_grad, model.parameters())
