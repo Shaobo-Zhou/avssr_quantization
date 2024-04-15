@@ -23,12 +23,20 @@ class Trainer(BaseTrainer):
         self.criterion.set_ss_mode("train")
         self.train_metrics.reset()
         self.writer.add_scalar("epoch", epoch)
+
+        self.grad_steps = 0
+        self.zero_grad = True
+
         for batch_idx, batch in enumerate(
             tqdm(self.train_dataloader, desc="train", total=self.epoch_len)
         ):
             try:
                 batch = self.process_batch(
-                    batch, metrics=self.train_metrics, part="train"
+                    batch,
+                    batch_idx,
+                    metrics=self.train_metrics,
+                    part="train",
+                    total=self.epoch_len,
                 )
             except torch.cuda.OutOfMemoryError as e:
                 if self.skip_oom:
@@ -78,12 +86,15 @@ class Trainer(BaseTrainer):
 
         return log
 
-    def process_batch(self, batch, metrics: MetricTracker, part: str):
+    def process_batch(
+        self, batch, batch_idx, metrics: MetricTracker, part: str, total: int
+    ):
         batch = self.move_batch_to_device(batch)
         batch = self.transform_batch(batch)  # transform batch on device -- faster
 
-        if self.is_train:
+        if self.is_train and self.zero_grad:
             self.optimizer.zero_grad()
+            self.zero_grad = False
         outputs = self.model(**batch)
         batch.update(outputs)
 
@@ -91,9 +102,14 @@ class Trainer(BaseTrainer):
         batch.update(all_losses)
 
         if self.is_train:
-            batch["loss"].backward()  # sum of all losses is always called loss
-            self._clip_grad_norm()
-            self.optimizer.step()
+            # scale loss
+            final_loss = batch["loss"] / self.grad_accum_steps
+            final_loss.backward()
+
+            if (batch_idx + 1) % self.grad_accum_steps == 0 or batch_idx + 1 == total:
+                self._clip_grad_norm()
+                self.optimizer.step()
+                self.zero_grad = True  # zero next grad
 
         # update metrics for each loss (in case of multiple losses)
         for loss_name in self.config.writer.loss_names:
@@ -114,14 +130,21 @@ class Trainer(BaseTrainer):
         self.model.eval()
         self.criterion.set_ss_mode("inference")
         self.evaluation_metrics[part].reset()
+
+        eval_epoch_len = len(dataloader)
+
         with torch.no_grad():
             for batch_idx, batch in tqdm(
                 enumerate(dataloader),
                 desc=part,
-                total=len(dataloader),
+                total=eval_epoch_len,
             ):
                 batch = self.process_batch(
-                    batch, metrics=self.evaluation_metrics[part], part=part
+                    batch,
+                    batch_idx,
+                    metrics=self.evaluation_metrics[part],
+                    part=part,
+                    total=eval_epoch_len,
                 )
             self.writer.set_step(epoch * self.epoch_len, part)
             self._log_scalars(self.evaluation_metrics[part])

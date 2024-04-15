@@ -49,6 +49,9 @@ class BaseTrainer:
         self.optimizer = optimizer
         self.lr_scheduler = lr_scheduler
         self.batch_transforms = batch_transforms
+        # use for gradient accumulation
+        self.grad_accum_steps = cfg_trainer.grad_accum_steps
+        self.zero_grad = True
 
         # define dataloaders
         self.train_dataloader = dataloaders["train"]
