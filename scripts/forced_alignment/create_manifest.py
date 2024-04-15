@@ -34,7 +34,7 @@ def create_alignment(dataset_name, audio_path, text_path, use_asr):
             else:
                 text_file = text_path / f"{filename}.txt"
                 with open(text_file, "r") as f:
-                    text = f.readline().strip()
+                    text = f.readline().strip().lower()
 
                 manifest_data.append({"audio_filepath": str(wav_path), "text": text})
 

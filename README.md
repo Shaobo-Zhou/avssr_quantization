@@ -55,10 +55,17 @@ Follow these steps to work with the project:
    pre-commit install
    ```
 
-3. download pretrained models:
+3. Download pretrained models:
 
    ```bash
    python3 scripts/get_pretrain.py
+   ```
+
+4. [LRS2-Mix](https://huggingface.co/datasets/JusperLee/LRS2-2Mix) does not have full audio and text. Download [LRS2 dataset](https://www.robots.ox.ac.uk/~vgg/data/lip_reading/lrs2.html) and use these scripts to get audio and text:
+
+   ```bash
+   cd scripts
+   python3 get_audio_and_text.py --dataset_name=lrs2_rebuild --video_root_path=PATH_TO_RAW_LRS2
    ```
 
 ## Experiments

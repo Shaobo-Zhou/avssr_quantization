@@ -14,7 +14,7 @@ lr_scheduler:
   _target_: torch.optim.lr_scheduler.ReduceLROnPlateau
   factor: 0.5
   patience: 10
-  mode: "max"
+  mode: "min"
 loss_function:
   _target_: src.loss.AVSSRLoss
   asr_coef: 1
