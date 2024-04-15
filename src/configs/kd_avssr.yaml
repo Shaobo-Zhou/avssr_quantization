@@ -1,7 +1,7 @@
 defaults:
   - model: ctcnet
   - writer: wandb
-  - metrics: main
+  - metrics: fast
   - datasets: kd_example
   - dataloader: main
   - transforms: main

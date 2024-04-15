@@ -1,0 +1,48 @@
+device: auto
+train: []
+val:
+  - _target_: src.metrics.ASRMetric
+    metric_type: CER
+    decode_type: argmax
+    device: ${metrics.device}
+    name: "CER_(argmax)"
+  - _target_: src.metrics.ASRMetric
+    metric_type: WER
+    decode_type: argmax
+    device: ${metrics.device}
+    name: "WER_(argmax)"
+  - _target_: src.metrics.SSMetric
+    metric_type: SDRi
+    device: ${metrics.device}
+    name: "SDRi"
+  - _target_: src.metrics.SSMetric
+    metric_type: "SI-SNRi"
+    device: ${metrics.device}
+    name: "SI-SNRi"
+  - _target_: src.metrics.SSMetric
+    metric_type: STOI
+    device: ${metrics.device}
+    name: "STOI"
+test:
+  - _target_: src.metrics.ASRMetric
+    metric_type: CER
+    decode_type: argmax
+    device: ${metrics.device}
+    name: "CER_(argmax)"
+  - _target_: src.metrics.ASRMetric
+    metric_type: WER
+    decode_type: argmax
+    device: ${metrics.device}
+    name: "WER_(argmax)"
+  - _target_: src.metrics.SSMetric
+    metric_type: SDRi
+    device: ${metrics.device}
+    name: "SDRi"
+  - _target_: src.metrics.SSMetric
+    metric_type: "SI-SNRi"
+    device: ${metrics.device}
+    name: "SI-SNRi"
+  - _target_: src.metrics.SSMetric
+    metric_type: STOI
+    device: ${metrics.device}
+    name: "STOI"

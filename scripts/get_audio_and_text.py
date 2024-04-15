@@ -5,7 +5,7 @@ from pathlib import Path
 
 from tqdm.auto import tqdm
 
-ROOT_PATH = Path(__file__).absolute().resolve().parent.parent.parent
+ROOT_PATH = Path(__file__).absolute().resolve().parent.parent
 
 
 def get_audio_from_video(dataset_name, video_root_path):
