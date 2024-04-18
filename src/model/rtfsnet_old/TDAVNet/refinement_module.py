@@ -3,9 +3,9 @@ import inspect
 import torch
 import torch.nn as nn
 
-from src.model.rtfsnet import separators
-from src.model.rtfsnet.TDAVNet.fusion import MultiModalFusion
-from src.model.rtfsnet.utils import get_MACS_params
+from .. import separators
+from ..utils import get_MACS_params
+from .fusion import MultiModalFusion
 
 
 class RefinementModule(nn.Module):

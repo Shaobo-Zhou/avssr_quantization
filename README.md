@@ -95,6 +95,8 @@ Here is an example for CTCNet:
 python3 save_embeddings.py model=ctcnet +model.ss_pretrain_path="ctcnet/lrs2_best_model.pt" model.ss_model.video_config.shared=False saver.save_key=kd_embedding
 ```
 
+**Note**: It is also possible to do KD on the fly (if you cannot save tensors due to space limit). To do this, add `+model/ss_teacher=TEACHER_NAME +loss_function.kd_coef=KD_COEF` to your standard `train.py` run.
+
 ## Credits
 
 This repository is based on a heavily modified fork of [pytorch_project_template](https://github.com/Blinorot/pytorch_project_template).

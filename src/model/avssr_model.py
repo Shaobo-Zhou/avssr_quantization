@@ -16,6 +16,7 @@ class AVSSRModel(nn.Module):
         asr_model,  # model from src.model.asr
         train_video_model=False,
         ss_pretrain_path=None,
+        ss_teacher=None,  # AVSS teacher used for distillation on the fly
         **kwargs,
     ) -> None:
         super().__init__()
@@ -24,6 +25,8 @@ class AVSSRModel(nn.Module):
         self.video_model = video_model
         self.asr_model = asr_model
         self.train_video_model = train_video_model
+
+        self.ss_teacher = ss_teacher
 
         if ss_pretrain_path is not None:
             ss_pretrain_path = str(ROOT_PATH / "data" / "pretrain" / ss_pretrain_path)
@@ -48,6 +51,12 @@ class AVSSRModel(nn.Module):
         # join keys
         ss_batch.update(asr_batch)
 
+        # teacher for KD
+        if self.ss_teacher is not None:
+            with torch.no_grad():
+                teacher_ss_batch = self.ss_teacher(mix_audio, s_video)
+                ss_batch["t_kd_embedding"] = teacher_ss_batch["kd_embedding"]
+
         return ss_batch
 
     def __str__(self):
@@ -56,8 +65,18 @@ class AVSSRModel(nn.Module):
         """
 
         full_params = sum([p.numel() for p in self.parameters()])
-        video_params = sum([p.numel() for p in self.video_model.parameters()])
+
+        if self.video_model is not None:
+            video_params = sum([p.numel() for p in self.video_model.parameters()])
+        else:
+            video_params = 0
+
         asr_params = sum([p.numel() for p in self.asr_model.parameters()])
+
+        if self.ss_teacher is not None:
+            teacher_params = sum([p.numel() for p in self.ss_teacher.parameters()])
+            full_params = full_params - teacher_params
+
         ss_params = full_params - video_params - asr_params
 
         model_parameters = filter(lambda p: p.requires_grad, self.parameters())

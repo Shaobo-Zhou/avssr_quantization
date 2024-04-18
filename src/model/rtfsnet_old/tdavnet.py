@@ -4,7 +4,16 @@ from .layers import ConvNormAct
 from .TDAVNet import BaseAVModel, RefinementModule, decoder, encoder, mask_generator
 
 
-class RTFSNet(BaseAVModel):
+class RTFSNetOld(BaseAVModel):
+    """
+    This is an old version of RTFSNet code provided by authors
+
+    It is needed only to do Knowledge Distillation and load checkpoint.
+    Do not use it otherwise.
+
+    Use the same configs as for new RTFSNet, just change the _target_
+    """
+
     def __init__(
         self,
         n_src: int,
