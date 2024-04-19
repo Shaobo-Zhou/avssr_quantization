@@ -33,8 +33,8 @@ class AVSSRModel(nn.Module):
             print(f"Loading SS weights from {ss_pretrain_path}...")
             self.ss_model.init_from(ss_pretrain_path)
 
-    def train(self):
-        super().train()
+    def train(self, mode: bool = True):
+        super().train(mode)
 
         # these models should always be in eval mode
         if not self.train_video_model:
