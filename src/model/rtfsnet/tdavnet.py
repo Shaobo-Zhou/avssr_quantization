@@ -112,6 +112,7 @@ class RTFSNet(BaseAVModel):
         )  # B, n_src, L
 
         predicted_audio = separated_audios.squeeze(1)
+        fused_feats = fused_feats.transpose(-1, -2)  # time last
         # fused_feats = refined_features
 
         return {

@@ -33,6 +33,18 @@ class AVSSRModel(nn.Module):
             print(f"Loading SS weights from {ss_pretrain_path}...")
             self.ss_model.init_from(ss_pretrain_path)
 
+    def train(self):
+        super().train()
+
+        # these models should always be in eval mode
+        if not self.train_video_model:
+            self.video_model.eval()
+
+        if self.ss_teacher is not None:
+            self.ss_teacher.eval()
+
+        return self
+
     def forward(self, mix_audio, s_video, s_audio_length, **batch):
         # get predicted_audio, fused_features, etc.
         if self.video_model is None:
