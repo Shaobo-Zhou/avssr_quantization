@@ -44,7 +44,8 @@ asr_model:
   _target_: src.model.asr.ASRConformer
   input_dim: 256
   num_encoder_layers: 1
-  res_reduce: 125
-  conv_kernel_size: 7
+  res_reduce: 19.51
+  conv_kernel_size: 9
   encoder_dim: 64
-  do_subsample: false
+  subsampling_factor: 8 # must be a power of 2
+  do_subsample: True

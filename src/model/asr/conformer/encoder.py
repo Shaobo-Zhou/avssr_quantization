@@ -148,15 +148,18 @@ class ConformerEncoder(nn.Module):
         conv_kernel_size: int = 31,
         half_step_residual: bool = True,
         do_subsample: bool = True,
+        subsampling_factor: int = 4,
     ):
         super(ConformerEncoder, self).__init__()
         self.do_subsample = do_subsample
         if self.do_subsample:
             self.conv_subsample = Conv2dSubampling(
-                in_channels=1, out_channels=encoder_dim
+                in_channels=1,
+                out_channels=encoder_dim,
+                subsampling_factor=subsampling_factor,
             )
             self.input_projection = nn.Sequential(
-                Linear(encoder_dim * (((input_dim - 1) // 2 - 1) // 2), encoder_dim),
+                Linear(encoder_dim * (input_dim // subsampling_factor), encoder_dim),
                 nn.Dropout(p=input_dropout_p),
             )
         else:

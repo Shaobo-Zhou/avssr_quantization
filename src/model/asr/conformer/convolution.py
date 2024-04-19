@@ -185,14 +185,28 @@ class Conv2dSubampling(nn.Module):
         - **output_lengths** (batch): list of sequence output lengths
     """
 
-    def __init__(self, in_channels: int, out_channels: int) -> None:
+    def __init__(
+        self, in_channels: int, out_channels: int, subsampling_factor: int
+    ) -> None:
         super(Conv2dSubampling, self).__init__()
-        self.sequential = nn.Sequential(
-            nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=2),
+        self.subsampling_factor = subsampling_factor
+
+        convs = [
+            nn.Conv2d(in_channels, out_channels, kernel_size=4, stride=2, padding=1),
             nn.ReLU(),
-            nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=2),
-            nn.ReLU(),
-        )
+        ]
+
+        while subsampling_factor != 2:
+            subsampling_factor //= 2
+            convs.extend(
+                [
+                    nn.Conv2d(
+                        out_channels, out_channels, kernel_size=4, stride=2, padding=1
+                    ),
+                    nn.ReLU(),
+                ]
+            )
+        self.sequential = nn.Sequential(*convs)
 
     def forward(self, inputs: Tensor, input_lengths: Tensor) -> Tuple[Tensor, Tensor]:
         outputs = self.sequential(inputs.unsqueeze(1))
@@ -203,7 +217,6 @@ class Conv2dSubampling(nn.Module):
             batch_size, subsampled_lengths, channels * sumsampled_dim
         )
 
-        output_lengths = input_lengths >> 2
-        output_lengths -= 1
+        output_lengths = input_lengths // self.subsampling_factor
 
         return outputs, output_lengths

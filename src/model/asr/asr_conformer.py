@@ -1,3 +1,4 @@
+import torch
 from torch import nn
 
 from src.model.asr.conformer import ConformerEncoder
@@ -21,6 +22,7 @@ class ASRConformer(nn.Module):
         conv_kernel_size: int = 31,
         half_step_residual: bool = True,
         do_subsample: bool = True,
+        subsampling_factor: int = 4,
         **kwargs
     ) -> None:
         super().__init__()
@@ -39,6 +41,7 @@ class ASRConformer(nn.Module):
             conv_kernel_size=conv_kernel_size,
             half_step_residual=half_step_residual,
             do_subsample=do_subsample,
+            subsampling_factor=subsampling_factor,
         )
 
         self.fc = nn.Linear(encoder_dim, n_tokens)
@@ -49,7 +52,7 @@ class ASRConformer(nn.Module):
     def forward(self, fused_feats, s_audio_length):
         fused_feats = fused_feats.squeeze(1).transpose(1, 2)  # B x T x C
         encoder_output, s_audio_length = self.encoder(
-            fused_feats, s_audio_length // self.res_reduce
+            fused_feats, (s_audio_length // self.res_reduce).to(torch.int32)
         )
         tokens_logits = self.fc(encoder_output)
         # tokens_logits = tokens_logits.view(tokens_logits.shape[0], -1, self.n_tokens)

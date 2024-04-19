@@ -43,8 +43,9 @@ train_video_model: false
 asr_model:
   _target_: src.model.asr.ASRConformer
   input_dim: 256
-  num_encoder_layers: 3
-  res_reduce: 125
+  num_encoder_layers: 1
+  res_reduce: 19.51
   conv_kernel_size: 9
-  encoder_dim: 256
-  do_subsample: false
+  encoder_dim: 64
+  subsampling_factor: 8 # must be a power of 2
+  do_subsample: True
