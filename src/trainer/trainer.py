@@ -109,9 +109,10 @@ class Trainer(BaseTrainer):
             if (batch_idx + 1) % self.grad_accum_steps == 0 or batch_idx + 1 == total:
                 self._clip_grad_norm()
                 self.optimizer.step()
-                if self.config.trainer.lr_scheduler_type == "step":
-                    self.lr_scheduler.step()
                 self.zero_grad = True  # zero next grad
+
+            if self.config.trainer.lr_scheduler_type == "step":
+                self.lr_scheduler.step()
 
         # update metrics for each loss (in case of multiple losses)
         for loss_name in self.config.writer.loss_names:
