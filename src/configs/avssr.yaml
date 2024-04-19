@@ -5,16 +5,12 @@ defaults:
   - datasets: example
   - dataloader: main
   - transforms: main
+  - lr_scheduler: ReduceLROnPlateau
   - _self_
 optimizer:
   _target_: torch.optim.AdamW
   lr: 1e-3
   weight_decay: 1e-1
-lr_scheduler:
-  _target_: torch.optim.lr_scheduler.ReduceLROnPlateau
-  factor: 0.5
-  patience: 10
-  mode: "min"
 loss_function:
   _target_: src.loss.AVSSRLoss
   asr_coef: 1
@@ -36,3 +32,4 @@ trainer:
   save_dir: "saved"
   seed: 1
   grad_accum_steps: 1
+  lr_scheduler_type: "epoch"

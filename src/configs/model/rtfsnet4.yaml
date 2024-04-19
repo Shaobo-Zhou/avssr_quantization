@@ -106,9 +106,10 @@ video_model:
   pretrain: frcnn_128_512.backbone.pth.tar
 train_video_model: false
 asr_model:
-  _target_: src.model.asr.ASRExample
-  n_input_feats: 125
-  n_hidden_channels: 32
+  _target_: src.model.asr.ASRRNN
+  rnn_input_size: 129
+  rnn_hidden_size: 32
+  rnn_bidirectional: True
+  rnn_num_layers: 1
   res_reduce: 500
   input_channels: 256
-  n_repeats: 1

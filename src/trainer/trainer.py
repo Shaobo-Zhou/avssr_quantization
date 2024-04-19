@@ -81,7 +81,7 @@ class Trainer(BaseTrainer):
             val_log = self._evaluation_epoch(epoch, part, dataloader)
             log.update(**{f"{part}_{name}": value for name, value in val_log.items()})
 
-        if self.lr_scheduler is not None:
+        if self.config.trainer.lr_scheduler_type != "step":
             self.lr_scheduler.step(log[self.mnt_metric])
 
         return log
@@ -109,6 +109,8 @@ class Trainer(BaseTrainer):
             if (batch_idx + 1) % self.grad_accum_steps == 0 or batch_idx + 1 == total:
                 self._clip_grad_norm()
                 self.optimizer.step()
+                if self.config.trainer.lr_scheduler_type == "step":
+                    self.lr_scheduler.step()
                 self.zero_grad = True  # zero next grad
 
         # update metrics for each loss (in case of multiple losses)

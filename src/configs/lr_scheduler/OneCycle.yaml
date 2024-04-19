@@ -1,0 +1,4 @@
+_target_: torch.optim.lr_scheduler.OneCycleLR
+pct_start: 0.03
+total_steps: 500000
+max_lr: 1e-3
