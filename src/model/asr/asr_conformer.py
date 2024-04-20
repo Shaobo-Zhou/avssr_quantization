@@ -23,6 +23,7 @@ class ASRConformer(nn.Module):
         half_step_residual: bool = True,
         do_subsample: bool = True,
         subsampling_factor: int = 4,
+        pre_conv_channels: int = 0,
         **kwargs
     ) -> None:
         super().__init__()
@@ -46,10 +47,19 @@ class ASRConformer(nn.Module):
 
         self.fc = nn.Linear(encoder_dim, n_tokens)
 
+        if pre_conv_channels != 0:
+            self.pre_conv = nn.Sequential(
+                nn.Conv2d(pre_conv_channels, 1, 1), nn.PReLU()
+            )
+        else:
+            self.pre_conv = None
+
         self.n_tokens = n_tokens
         self.res_reduce = res_reduce
 
     def forward(self, fused_feats, s_audio_length):
+        if self.pre_conv is not None:
+            fused_feats = self.pre_conv(fused_feats)  # -> B x 1 x C x T
         fused_feats = fused_feats.squeeze(1).transpose(1, 2)  # B x T x C
         encoder_output, s_audio_length = self.encoder(
             fused_feats, (s_audio_length // self.res_reduce).to(torch.int32)
