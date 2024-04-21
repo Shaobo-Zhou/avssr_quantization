@@ -90,6 +90,8 @@ class AudioVisual(nn.Module):
         vout_chan=256,
         vconv_kernel_size=3,
         vn_repeats=5,
+        #  asr_type
+        asr_type="middle",
         # fusion
         fout_chan=256,
         # video subnetwork
@@ -117,6 +119,8 @@ class AudioVisual(nn.Module):
         self.vout_chan = vout_chan
         self.vconv_kernel_size = vconv_kernel_size
         self.vn_repeats = vn_repeats
+        # asr_part
+        self.asr_type = asr_type
         # fusion part
         self.fout_chan = fout_chan
 
@@ -215,11 +219,16 @@ class AudioVisual(nn.Module):
                 # print("fusion", i)
                 a, v = self.get_crossmodal_fusion(i)(a, v)
 
+        # asr_type == "middle"
         fused_feats = a  # av_fused feats
 
         # audio decoder
         for _ in range(self.fn_repeats):
             a = self.audio_block(self.audio_concat(res_a + a))
+
+        if self.asr_type == "end":
+            fused_feats = a
+
         return a, fused_feats
 
     def forward(self, a, v):
@@ -280,6 +289,8 @@ class CTCNet(BaseAVEncoderMaskerDecoder):
         vout_chan=256,
         vconv_kernel_size=3,
         vn_repeats=5,
+        # asr_type
+        asr_type="middle",
         # fusion
         fout_chan=256,
         # enc_dec
@@ -328,6 +339,8 @@ class CTCNet(BaseAVEncoderMaskerDecoder):
             vout_chan=vout_chan,
             vconv_kernel_size=vconv_kernel_size,
             vn_repeats=vn_repeats,
+            # asr_type
+            asr_type=asr_type,
             # fusion
             fout_chan=fout_chan,
             video_config=video_config,
