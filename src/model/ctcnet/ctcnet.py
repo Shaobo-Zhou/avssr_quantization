@@ -209,6 +209,9 @@ class AudioVisual(nn.Module):
             # print("fusion", 0)
             a, v = self.get_crossmodal_fusion(0)(a, v)
 
+        # asr_type == "start"
+        fused_feats = a  # av_fused feats
+
         # iter 1 ~ self.an_repeats
         for i in range(1, self.an_repeats):
             a = self.audio_block(self.audio_concat(res_a + a))
@@ -220,7 +223,8 @@ class AudioVisual(nn.Module):
                 a, v = self.get_crossmodal_fusion(i)(a, v)
 
         # asr_type == "middle"
-        fused_feats = a  # av_fused feats
+        if self.asr_type == "middle":
+            fused_feats = a
 
         # audio decoder
         for _ in range(self.fn_repeats):
