@@ -62,9 +62,26 @@ def main(config):
             )
 
     # build optimizer, learning rate scheduler
-    trainable_params = filter(lambda p: p.requires_grad, model.parameters())
-    optimizer = instantiate(config.optimizer, params=trainable_params)
+    # trainable_params = filter(lambda p: p.requires_grad, model.parameters())
+    if model.__class__.__name__ == "ExampleModel":
+        params_dict = filter(lambda p: p.requires_grad, model.parameters())
+    else:
+        optimizer_params = OmegaConf.to_container(config.optimizer_params, resolve=True)
+        ss_params = model.ss_model.parameters()
+        asr_params = model.asr_model.parameters()
+        params_dict = [
+            {"params": ss_params, **optimizer_params["ss"]},
+            {"params": asr_params, **optimizer_params["asr"]},
+        ]
+        if model.train_video_model:
+            video_params = model.video_model.parameters()
+            params_dict.append(
+                {"params": video_params, **optimizer_params.get("video", {})}
+            )
+    optimizer = instantiate(config.optimizer, params=params_dict, _convert_="object")
+    logger.info(optimizer)
     lr_scheduler = instantiate(config.lr_scheduler, optimizer=optimizer)
+    logger.info(lr_scheduler)
 
     # epoch_len = number of iterations for iteration-based training
     # epoch_len = None or len(dataloader) for epoch-based training
