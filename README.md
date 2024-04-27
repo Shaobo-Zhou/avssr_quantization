@@ -81,6 +81,37 @@ To train the model, run the following command:
 python3 train.py --config_name=CONFIG_NAME # add optional Hydra parameters
 ```
 
+### Getting Metrics
+
+To save all predictions, including beam search and its LM version, run the following command:
+
+```bash
+python3 inference.py model=YOUR_MODEL\
+   datasets=YOUR_DATASET\
+   text_encoder.beam_size=BEAM_SIZE\
+   +inferencer.from_pretrained=PATH_TO_CHECKPOINT
+```
+
+Then calculate metrics using the following commands:
+
+```bash
+cd scripts
+python3  calculate_metrics.py --dataset_name=YOUR_DATASET
+```
+
+The metrics will be saved in `data/saved/YOUR_DATASET/SPLIT_NAME_metric.pth` and printed on the screen.
+
+> [!NOTE]
+> Before running `inference.py`, download LM using `scripts/get_lm.py`
+
+### Converting AVSSR StateDict to SS StateDict:
+
+Run the following script:
+
+```bash
+python3 scripts/get_ss_state_dict_from_checkpoint.py -c=AVSSR_CHECKPOINT.pth -o=data/pretrain/CTCNET_OR_RTFSNET/NAME.pth
+```
+
 ### Saving Embeddings for Knowledge Distillation
 
 To save embeddings from pre-trained model, run the following command:
