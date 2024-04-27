@@ -1,0 +1,17 @@
+defaults:
+  - model: example
+  - datasets: example_test_only
+  - dataloader: main
+  - transforms: main
+  - _self_
+text_encoder:
+  _target_: src.text_encoder.CTCTextEncoder
+  use_lm: True
+  beam_size: 3
+inferencer:
+  device_tensors: ["mix_audio", "s_audio", "s_video", "s_tokens_length", "s_audio_length"] # which tensors should be on device (ex. GPU)
+  device: auto # device name or "auto"
+  override: False # if True, will override the previous run with the same name
+  save_path: "example" # use dataset name
+  seed: 1
+  # include from_pretrained

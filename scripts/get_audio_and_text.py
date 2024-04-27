@@ -112,7 +112,7 @@ def get_audio_from_video(dataset_name, video_root_path):
 
 
 if __name__ == "__main__":
-    args = argparse.ArgumentParser(description="Create Manifest for Alignment")
+    args = argparse.ArgumentParser(description="Get raw audio and text from video")
     args.add_argument(
         "-d",
         "--dataset_name",

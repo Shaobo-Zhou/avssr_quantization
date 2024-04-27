@@ -4,6 +4,7 @@ torchaudio==2.2.0
 torchmetrics[all]
 pesq
 pyctcdecode
+kenlm
 soundfile
 numpy
 tqdm

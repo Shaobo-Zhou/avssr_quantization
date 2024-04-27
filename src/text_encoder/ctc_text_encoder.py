@@ -11,7 +11,7 @@ from src.utils.io_utils import ROOT_PATH
 class CTCTextEncoder:
     EMPTY_TOK = ""
 
-    def __init__(self, alphabet=None, use_lm=False):
+    def __init__(self, alphabet=None, use_lm=False, **kwargs):
         """
         :param alphabet: alphabet for language. If None it will be set to ascii
         :param use_lm: whether to enable the support for Language Model Beam Search
@@ -29,7 +29,8 @@ class CTCTextEncoder:
 
         self.use_lm = use_lm
         if use_lm:
-            self.kenlm = ROOT_PATH / "data" / "lm" / "librispeech" / "4-gram.arpa"
+            self.kenlm_path = ROOT_PATH / "data" / "lm" / "librispeech" / "4-gram.arpa"
+            self.unigram_path = self.kenlm_path.parent / "librispeech-vocab.txt"
             self.lm_decoder = self._create_lm_decoder()
 
     def __len__(self):
@@ -55,7 +56,12 @@ class CTCTextEncoder:
 
         vocab = [elem.upper() for elem in vocab]
 
-        decoder = build_ctcdecoder(vocab, kenlm_model_path=str(self.kenlm_path))
+        with self.unigram_path.open() as f:
+            unigram_list = [t for t in f.read().strip().split("\n")]
+
+        decoder = build_ctcdecoder(
+            vocab, kenlm_model_path=str(self.kenlm_path), unigrams=unigram_list
+        )
 
         return decoder
 

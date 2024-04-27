@@ -334,7 +334,11 @@ class BaseTrainer:
         :param pretrained_path: path to model state dict
         """
         pretrained_path = str(pretrained_path)
-        self.logger.info("Loading model weights from: {} ...".format(pretrained_path))
+        log_str = "Loading model weights from: {} ...".format(pretrained_path)
+        if hasattr(self, "logger"):
+            self.logger.info(log_str)
+        else:
+            print(log_str)
         checkpoint = torch.load(pretrained_path, self.device)
 
         if checkpoint.get("state_dict") is not None:

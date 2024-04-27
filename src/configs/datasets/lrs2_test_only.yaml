@@ -1,0 +1,9 @@
+test:
+  _target_: src.datasets.AVDataset
+  dataset_name: lrs2_rebuild
+  name: tt
+  audio_path: audio/wav16k/min
+  video_path: mouths
+  text_path: cropped_text
+  n_src: 1
+  instance_transforms: ${transforms.instance_transforms.inference}
