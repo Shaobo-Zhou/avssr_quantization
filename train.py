@@ -80,7 +80,9 @@ def main(config):
             )
     optimizer = instantiate(config.optimizer, params=params_dict, _convert_="object")
     logger.info(optimizer)
-    lr_scheduler = instantiate(config.lr_scheduler, optimizer=optimizer)
+    lr_scheduler = instantiate(
+        config.lr_scheduler, optimizer=optimizer, _convert_="object"
+    )
     logger.info(lr_scheduler)
 
     # epoch_len = number of iterations for iteration-based training
