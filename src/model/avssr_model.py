@@ -17,6 +17,7 @@ class AVSSRModel(nn.Module):
         train_video_model=False,
         ss_pretrain_path=None,
         ss_teacher=None,  # AVSS teacher used for distillation on the fly
+        asr_aug=None,
         **kwargs,
     ) -> None:
         super().__init__()
@@ -27,6 +28,7 @@ class AVSSRModel(nn.Module):
         self.train_video_model = train_video_model
 
         self.ss_teacher = ss_teacher
+        self.asr_aug = asr_aug
 
         if ss_pretrain_path is not None:
             ss_pretrain_path = str(ROOT_PATH / "data" / "pretrain" / ss_pretrain_path)
@@ -58,6 +60,8 @@ class AVSSRModel(nn.Module):
             ss_batch = self.ss_model(mix_audio, mouth_emb)
 
         # get tokens_logits, s_audio_length
+        if self.asr_aug is not None:
+            ss_batch["fused_feats"] = self.asr_aug(ss_batch["fused_feats"])
         asr_batch = self.asr_model(ss_batch["fused_feats"], s_audio_length)
 
         # join keys

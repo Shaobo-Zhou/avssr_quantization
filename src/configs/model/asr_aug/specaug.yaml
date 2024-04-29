@@ -1,0 +1,8 @@
+_target_: torchaudio.transforms.SpecAugment
+n_time_masks: 10
+time_mask_param: 80
+n_freq_masks: 1
+freq_mask_param: 80
+iid_masks: False
+p: 0.05
+zero_masking: 0
