@@ -4,5 +4,5 @@ time_mask_param: 80
 n_freq_masks: 1
 freq_mask_param: 80
 iid_masks: False
-p: 0.05
+p: 1
 zero_masking: True
