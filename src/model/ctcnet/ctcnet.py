@@ -356,12 +356,18 @@ class CTCNet(BaseAVEncoderMaskerDecoder):
             encoder, masker, decoder, encoder_activation=encoder_activation
         )
 
+        self.asr_type = asr_type
+
     def forward(self, wav, mouth_emb):
         shape = wav.shape
         wav = _unsqueeze_to_3d(wav)
 
         enc_w = self.forward_encoder(wav)
         masks, fused_feats = self.forward_masker(enc_w, mouth_emb)
+
+        if self.asr_type == "demixed":
+            fused_feats = masks.squeeze(1)
+
         ests_wav = self.forward_decoder(masks)
 
         reconstructed = pad_x_to_y(ests_wav, wav)
