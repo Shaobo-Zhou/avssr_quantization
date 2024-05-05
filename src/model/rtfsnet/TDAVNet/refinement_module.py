@@ -16,6 +16,7 @@ class RefinementModule(nn.Module):
         audio_bn_chan: int,
         video_bn_chan: int,
         fusion_params: dict,
+        asr_type: str,
     ):
         super(RefinementModule, self).__init__()
         self.audio_params = audio_params
@@ -43,6 +44,8 @@ class RefinementModule(nn.Module):
             fusion_repeats=self.fusion_repeats,
         )
 
+        self.asr_type = asr_type
+
     def forward(self, audio: torch.Tensor, video: torch.Tensor):
         audio_residual = audio
         video_residual = video
@@ -67,6 +70,9 @@ class RefinementModule(nn.Module):
             audio = self.audio_net.get_block(i)(
                 audio + audio_residual if i > 0 else audio
             )
+
+        if self.asr_type == "end":
+            fused_feats = audio
 
         return audio, fused_feats
 

@@ -26,6 +26,7 @@ class RTFSNetOld(BaseAVModel):
         video_params: dict = dict(),
         fusion_params: dict = dict(),
         print_macs: bool = False,
+        asr_type: str = "middle",
         *args,
         **kwargs,
     ):
@@ -41,6 +42,7 @@ class RTFSNetOld(BaseAVModel):
         self.fusion_params = fusion_params
         self.mask_generation_params = mask_generation_params
         self.print_macs = print_macs
+        self.asr_type = asr_type
 
         self.encoder: encoder.BaseEncoder = encoder.get(
             self.enc_dec_params["encoder_type"]
@@ -77,6 +79,7 @@ class RTFSNetOld(BaseAVModel):
             video_params=self.video_params,
             audio_bn_chan=self.audio_bn_chan,
             video_bn_chan=self.video_bn_chan,
+            asr_type=self.asr_type,
         )
 
         self.mask_generator: mask_generator.BaseMaskGenerator = mask_generator.get(
@@ -119,6 +122,9 @@ class RTFSNetOld(BaseAVModel):
         separated_audios = self.decoder(
             separated_audio_embeddings, audio_mixture.shape
         )  # B, n_src, L
+
+        if self.asr_type == "demixed":
+            fused_feats = separated_audio_embeddings.squeeze(1)
 
         predicted_audio = separated_audios.squeeze(1)
         fused_feats = fused_feats.transpose(-1, -2)  # time last
