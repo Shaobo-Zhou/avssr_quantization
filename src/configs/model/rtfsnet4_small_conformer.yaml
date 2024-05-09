@@ -10,7 +10,7 @@ ss_model:
   audio_bn_params:
     pre_norm_type: gLN
     pre_act_type: ReLU
-    out_chan: 256
+    out_chan: 128
     kernel_size: 1
     is2d: true
 
@@ -19,7 +19,7 @@ ss_model:
     decoder_type: STFTDecoder
     win: 256
     hop_length: 128
-    out_chan: 256
+    out_chan: 128
     kernel_size: 3
     stride: 1
     bias: false
@@ -113,5 +113,5 @@ asr_model:
   conv_kernel_size: 9
   encoder_dim: 64
   subsampling_factor: 8 # must be a power of 2
-  pre_conv_channels: 256
+  pre_conv_channels: 128
   do_subsample: False
