@@ -15,6 +15,7 @@ class AVSSRModel(nn.Module):
         video_model,  # ResNet18 or ShuffleNet
         asr_model,  # model from src.model.asr
         train_video_model=False,
+        train_ss_model=True,
         ss_pretrain_path=None,
         ss_teacher=None,  # AVSS teacher used for distillation on the fly
         asr_aug=None,
@@ -26,6 +27,7 @@ class AVSSRModel(nn.Module):
         self.video_model = video_model
         self.asr_model = asr_model
         self.train_video_model = train_video_model
+        self.train_ss_model = train_ss_model
 
         self.ss_teacher = ss_teacher
         self.asr_aug = asr_aug
@@ -42,6 +44,9 @@ class AVSSRModel(nn.Module):
         if not self.train_video_model:
             self.video_model.eval()
 
+        if not self.train_ss_model:
+            self.ss_model.eval()
+
         if self.ss_teacher is not None:
             self.ss_teacher.eval()
 
@@ -57,7 +62,12 @@ class AVSSRModel(nn.Module):
                     mouth_emb = self.video_model(s_video)
             else:
                 mouth_emb = self.video_model(s_video)
-            ss_batch = self.ss_model(mix_audio, mouth_emb)
+
+            if not self.train_ss_model:
+                with torch.no_grad():
+                    ss_batch = self.ss_model(mix_audio, mouth_emb)
+            else:
+                ss_batch = self.ss_model(mix_audio, mouth_emb)
 
         # get tokens_logits, s_audio_length
         if self.training and self.asr_aug is not None:

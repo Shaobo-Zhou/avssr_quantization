@@ -70,9 +70,10 @@ def main(config):
         ss_params = model.ss_model.parameters()
         asr_params = model.asr_model.parameters()
         params_dict = [
-            {"params": ss_params, **optimizer_params["ss"]},
             {"params": asr_params, **optimizer_params["asr"]},
         ]
+        if model.train_ss_model:
+            params_dict.append({"params": ss_params, **optimizer_params["ss"]})
         if model.train_video_model:
             video_params = model.video_model.parameters()
             params_dict.append(
