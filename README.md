@@ -81,6 +81,8 @@ To train the model, run the following command:
 python3 train.py --config_name=CONFIG_NAME # add optional Hydra parameters
 ```
 
+To use ASR augmentation, add `+model/asr_aug=config_name`.
+
 ### Getting Metrics
 
 To save all predictions, including beam search and its LM version, run the following command:

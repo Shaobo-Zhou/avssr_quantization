@@ -57,9 +57,11 @@ class ASRConformer(nn.Module):
         self.n_tokens = n_tokens
         self.res_reduce = res_reduce
 
-    def forward(self, fused_feats, s_audio_length):
+    def forward(self, fused_feats, s_audio_length, aug=None):
         if self.pre_conv is not None:
             fused_feats = self.pre_conv(fused_feats)  # -> B x 1 x C x T
+        if self.training and aug is not None:
+            fused_feats = aug(fused_feats)
         fused_feats = fused_feats.squeeze(1).transpose(1, 2)  # B x T x C
         encoder_output, s_audio_length = self.encoder(
             fused_feats, (s_audio_length // self.res_reduce).to(torch.int32)

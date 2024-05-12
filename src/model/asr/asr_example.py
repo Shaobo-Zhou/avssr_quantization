@@ -36,7 +36,7 @@ class ASRExample(nn.Module):
         self.n_tokens = n_tokens
         self.res_reduce = res_reduce
 
-    def forward(self, fused_feats, s_audio_length):
+    def forward(self, fused_feats, s_audio_length, aug=None):
         conv_output = self.conv_part(fused_feats)  # B x C x F x T -> B x 1 x F x T
 
         conv_output = conv_output.squeeze(1).transpose(1, 2)  # B x T x C

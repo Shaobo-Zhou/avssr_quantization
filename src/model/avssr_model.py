@@ -70,9 +70,11 @@ class AVSSRModel(nn.Module):
                 ss_batch = self.ss_model(mix_audio, mouth_emb)
 
         # get tokens_logits, s_audio_length
-        if self.training and self.asr_aug is not None:
-            ss_batch["fused_feats"] = self.asr_aug(ss_batch["fused_feats"])
-        asr_batch = self.asr_model(ss_batch["fused_feats"], s_audio_length)
+        # if self.training and self.asr_aug is not None:
+        #     ss_batch["fused_feats"] = self.asr_aug(ss_batch["fused_feats"])
+        asr_batch = self.asr_model(
+            ss_batch["fused_feats"], s_audio_length, self.asr_aug
+        )
 
         # join keys
         ss_batch.update(asr_batch)

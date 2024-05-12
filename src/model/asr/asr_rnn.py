@@ -31,7 +31,7 @@ class ASRRNN(nn.Module):
         self.n_tokens = n_tokens
         self.res_reduce = res_reduce
 
-    def forward(self, fused_feats, s_audio_length):
+    def forward(self, fused_feats, s_audio_length, aug=None):
         conv_output = self.pre_conv(fused_feats)  # B x C x F x T -> B x 1 x F x T
 
         conv_output = conv_output.squeeze(1).permute(2, 0, 1)  # T x B x F
