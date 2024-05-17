@@ -18,6 +18,7 @@ class AVSSRModel(nn.Module):
         train_ss_model=True,
         ss_pretrain_path=None,
         ss_teacher=None,  # AVSS teacher used for distillation on the fly
+        ss_teacher_proj=None,
         asr_aug=None,
         **kwargs,
     ) -> None:
@@ -30,6 +31,13 @@ class AVSSRModel(nn.Module):
         self.train_ss_model = train_ss_model
 
         self.ss_teacher = ss_teacher
+        self.ss_teacher_proj = None
+        if ss_teacher_proj is not None:
+            self.ss_teacher_proj = nn.Sequential(
+                nn.Conv2d(ss_teacher_proj[0], ss_teacher_proj[1], kernel_size=1),
+                nn.PReLU(),
+            )
+
         self.asr_aug = asr_aug
 
         if ss_pretrain_path is not None:
@@ -84,6 +92,13 @@ class AVSSRModel(nn.Module):
             with torch.no_grad():
                 teacher_ss_batch = self.ss_teacher(mix_audio, s_video)
                 ss_batch["t_kd_embedding"] = teacher_ss_batch["kd_embedding"]
+            if self.ss_teacher_proj is not None:
+                ss_batch["t_kd_embedding"] = self.ss_teacher_proj(
+                    ss_batch["t_kd_embedding"]
+                )
+
+        print(ss_batch["t_kd_embedding"].shape)
+        print(ss_batch["kd_embedding"].shape)
 
         return ss_batch
 
