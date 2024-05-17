@@ -97,9 +97,6 @@ class AVSSRModel(nn.Module):
                     ss_batch["t_kd_embedding"]
                 )
 
-        print(ss_batch["t_kd_embedding"].shape)
-        print(ss_batch["kd_embedding"].shape)
-
         return ss_batch
 
     def __str__(self):
