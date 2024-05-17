@@ -74,6 +74,10 @@ def main(config):
         ]
         if model.train_ss_model:
             params_dict.append({"params": ss_params, **optimizer_params["ss"]})
+        if model.ss_teacher_proj is not None:
+            params_dict.append(
+                {"params": model.ss_teacher_proj.parameters(), **optimizer_params["ss"]}
+            )
         if model.train_video_model:
             video_params = model.video_model.parameters()
             params_dict.append(
