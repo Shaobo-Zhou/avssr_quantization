@@ -341,7 +341,12 @@ class BaseTrainer:
             print(log_str)
         checkpoint = torch.load(pretrained_path, self.device)
 
-        if checkpoint.get("state_dict") is not None:
-            self.model.load_state_dict(checkpoint["state_dict"])
+        if hasattr(self.model.ss_teacher) and self.model.ss_teacher is not None:
+            strict = False
         else:
-            self.model.load_state_dict(checkpoint)
+            strict = True
+
+        if checkpoint.get("state_dict") is not None:
+            self.model.load_state_dict(checkpoint["state_dict"], strict=strict)
+        else:
+            self.model.load_state_dict(checkpoint, strict=strict)
