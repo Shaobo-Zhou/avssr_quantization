@@ -341,7 +341,7 @@ class BaseTrainer:
             print(log_str)
         checkpoint = torch.load(pretrained_path, self.device)
 
-        if hasattr(self.model.ss_teacher) and self.model.ss_teacher is not None:
+        if hasattr(self.model, "ss_teacher") and self.model.ss_teacher is not None:
             strict = False
         else:
             strict = True
