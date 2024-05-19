@@ -93,8 +93,8 @@ class AVSSRModel(nn.Module):
                 teacher_ss_batch = self.ss_teacher(mix_audio, s_video)
                 ss_batch["t_kd_embedding"] = teacher_ss_batch["kd_embedding"]
             if self.ss_teacher_proj is not None:
-                ss_batch["t_kd_embedding"] = self.ss_teacher_proj(
-                    ss_batch["t_kd_embedding"]
+                ss_batch["kd_embedding"] = self.ss_teacher_proj(
+                    ss_batch["kd_embedding"]
                 )
 
         return ss_batch

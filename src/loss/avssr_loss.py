@@ -13,7 +13,7 @@ class AVSSRLoss(_Loss):
         self.asr_loss = ASRLoss()
         self.train_ss_loss = PairwiseNegSDR(sdr_type="snr")
         self.inference_ss_loss = PairwiseNegSDR(sdr_type="sisdr")
-        self.kd_loss = nn.L1Loss()
+        self.kd_loss = nn.MSELoss()
 
         self.asr_coef = asr_coef
         self.ss_coef = ss_coef

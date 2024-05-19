@@ -4,6 +4,7 @@ from string import ascii_lowercase
 
 import torch
 from pyctcdecode import build_ctcdecoder
+from tokenizers import Tokenizer
 
 from src.utils.io_utils import ROOT_PATH
 
@@ -11,7 +12,7 @@ from src.utils.io_utils import ROOT_PATH
 class CTCTextEncoder:
     EMPTY_TOK = ""
 
-    def __init__(self, alphabet=None, use_lm=False, **kwargs):
+    def __init__(self, alphabet=None, use_lm=False, use_bpe=False, **kwargs):
         """
         :param alphabet: alphabet for language. If None it will be set to ascii
         :param use_lm: whether to enable the support for Language Model Beam Search
@@ -24,6 +25,14 @@ class CTCTextEncoder:
         self.vocab = [self.EMPTY_TOK] + list(self.alphabet)
         self.ind2char = dict(enumerate(self.vocab))
         self.char2ind = {v: k for k, v in self.ind2char.items()}
+
+        self.use_bpe = use_bpe
+        if self.use_bpe:
+            tok_path = ROOT_PATH / "data" / "bpe" / "tokenizer.json"
+            self.tokenizer = Tokenizer.from_file(str(tok_path))
+            self.char2ind = self.tokenizer.get_vocab()
+            self.ind2char = {v: k.lower() for k, v in self.char2ind.items()}
+            self.vocab = [self.ind2char[ind] for ind in range(len(self.ind2char))]
 
         self.bs_decoder = self._create_bs_decoder()
 
@@ -73,7 +82,10 @@ class CTCTextEncoder:
         Works for both BPE and usual alphabet
         """
         text = self.normalize_text(text)
-        return torch.tensor([self.char2ind[char] for char in text])
+        if self.use_bpe:
+            return torch.tensor(self.tokenizer.encode(text.upper()).ids)
+        else:
+            return torch.tensor([self.char2ind[char] for char in text])
 
     def ctc_decode(self, inds) -> str:
         """
