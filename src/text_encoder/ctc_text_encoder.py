@@ -83,7 +83,7 @@ class CTCTextEncoder:
         """
         text = self.normalize_text(text)
         if self.use_bpe:
-            return torch.tensor(self.tokenizer.encode(text.upper()).ids)
+            return torch.tensor(self.tokenizer.encode(text).ids)
         else:
             return torch.tensor([self.char2ind[char] for char in text])
 

@@ -7,6 +7,7 @@ from pathlib import Path
 import wget
 from tokenizers import Tokenizer
 from tokenizers.models import BPE
+from tokenizers.normalizers import BertNormalizer
 from tokenizers.pre_tokenizers import Whitespace
 from tokenizers.trainers import BpeTrainer
 
@@ -32,8 +33,9 @@ def main(args):
                 shutil.copyfileobj(f_in, f_out)
         os.remove(arc_path)
 
-    tokenizer = Tokenizer(BPE(unk_token="[UNK]"))
-    trainer = BpeTrainer(special_tokens=["", " ", "[UNK]"], vocab_size=args.vocabulary)
+    tokenizer = Tokenizer(BPE())
+    trainer = BpeTrainer(special_tokens=["", " "], vocab_size=args.vocabulary)
+    tokenizer.normalizer = BertNormalizer(strip_accents=True)
     tokenizer.pre_tokenizer = Whitespace()
     tokenizer.train([str(txt_path)], trainer)
     save_path = Path(__file__).absolute().resolve().parent.parent / "data" / "bpe"
