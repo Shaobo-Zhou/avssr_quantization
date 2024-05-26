@@ -106,6 +106,12 @@ The metrics will be saved in `data/saved/YOUR_DATASET/SPLIT_NAME_metric.pth` and
 > [!NOTE]
 > Before running `inference.py`, download LM using `scripts/get_lm.py`
 
+To calculate MACs (or FLOPs), run:
+
+```bash
+python3 flops.py model=MODEL_THAT_YOU_WANT text_encoder.use_lm=False dataloader.batch_size=1
+```
+
 ### Converting AVSSR StateDict to SS StateDict:
 
 Run the following script:
