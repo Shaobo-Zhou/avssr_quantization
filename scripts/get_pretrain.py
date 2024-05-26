@@ -9,6 +9,7 @@ ROOT_PATH = Path(__file__).absolute().resolve().parent.parent
 VIDEO_MODELS = {
     "frcnn_128_512.backbone.pth.tar": "13-T3nBnf21-lMKrV_XbH6Lf4vK2xU7lS",
     "lrw_snv05x_tcn1x.pth.tar": "197QXMxZ_fmsDxyvsqbDcV6XD7GUlaKHi",
+    "lrw_snv1x_tcn1x.pth.tar": "1a3umSDxTBebXl3detdumBYjVCF-UZ-kU",
 }
 
 CTCNET_MODELS = {"lrs2_best_model.pt": "1WtcpYYr8nMiIpJ1epnuGNk2DtiacUXDf"}
