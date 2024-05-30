@@ -10,7 +10,7 @@ SCRIPT_PATH = ROOT_PATH / "scripts" / "calculate_metrics.py"
 ROOT_CONFIG_PATH = ROOT_PATH / "src" / "configs" / "model" / "inference.yaml"
 
 
-def inference_and_calculate_all(dataset_name, checkpoints_path):
+def inference_and_calculate_all(dataset_name, checkpoints_path, bpe):
     print(checkpoints_path)
 
     inference_cmd = f"python3 {INFERENCE_PATH} model=inference datasets={dataset_name}"
@@ -18,6 +18,12 @@ def inference_and_calculate_all(dataset_name, checkpoints_path):
     metrics_cmd = f"python3 {SCRIPT_PATH} -d={dataset_name}"
 
     for checkpoint_dir in os.listdir(checkpoints_path):
+        if not bpe:
+            # skip BPE
+            # all BPE saved checkpoints start with BPE
+            if checkpoint_dir[:3] == "BPE":
+                continue
+
         dir_path = Path(checkpoints_path) / checkpoint_dir
         model_path = str(dir_path / "model_best.pth")
         config_path = str(dir_path / "config.yaml")
@@ -58,7 +64,14 @@ if __name__ == "__main__":
         type=str,
         help="Path to all model checkpoints (default: None)",
     )
+    args.add_argument(
+        "-b",
+        "--bpe",
+        default=False,
+        type=bool,
+        help="If false, skip bpe models (default: False)",
+    )
 
     args = args.parse_args()
 
-    inference_and_calculate_all(args.dataset_name, args.checkpoints_path)
+    inference_and_calculate_all(args.dataset_name, args.checkpoints_path, args.bpe)
