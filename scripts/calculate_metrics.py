@@ -34,6 +34,7 @@ def get_metrics_from_file(
     argmax_text = data["argmax_text"]
     bs_text = data["bs_text"]
     lm_text = data["lm_text"]
+    lm_text_small = data["lm_text_small"]
 
     metric_mix = metric_sdr(mix_audio, s_audio)
     metric_pred = metric_sdr(predicted_audio, s_audio)
@@ -55,6 +56,9 @@ def get_metrics_from_file(
     lm_cer = metric_cer(lm_text, s_text)
     lm_wer = metric_wer(lm_text, s_text)
 
+    lm_small_cer = metric_cer(lm_text_small, s_text)
+    lm_small_wer = metric_wer(lm_text_small, s_text)
+
     return {
         "SDRi": sdr_i,
         "SI-SNRi": si_snr_i,
@@ -66,10 +70,12 @@ def get_metrics_from_file(
         "WER (BS)": bs_wer,
         "CER (LM)": lm_cer,
         "WER (LM)": lm_wer,
+        "CER (LM small)": lm_small_cer,
+        "WER (LM small)": lm_small_wer,
     }
 
 
-def calculate_metrics(dataset_name, device):
+def calculate_metrics(dataset_name, device, save_name):
     data_path = DATA_PATH / dataset_name
 
     if device == "auto":
@@ -85,7 +91,7 @@ def calculate_metrics(dataset_name, device):
 
     splits = os.listdir(str(data_path))
 
-    splits = filter(lambda x: not x.endswith("pth"), splits)
+    splits = filter(lambda x: not (x.endswith("pth") or x.endswith("txt")), splits)
     for split in splits:
         print(f"Calculating metrics for split: {split} ...")
 
@@ -109,11 +115,13 @@ def calculate_metrics(dataset_name, device):
                 result_metrics[k] += v
             amount += 1
 
-        for k, v in result_metrics.items():
-            result_metrics[k] = v / amount
-            print(f"Metric: {k}, Value: {result_metrics[k]}")
+        with open(data_path / f"{save_name}_{split}_metrics.txt", "w") as f:
+            for k, v in result_metrics.items():
+                result_metrics[k] = v / amount
+                print(f"Metric: {k}, Value: {result_metrics[k]}")
+                print(f"Metric: {k}, Value: {result_metrics[k]}", file=f)
 
-        torch.save(result_metrics, data_path / f"{split}_metrics.pth")
+        torch.save(result_metrics, data_path / f"{save_name}_{split}_metrics.pth")
 
 
 if __name__ == "__main__":
@@ -133,7 +141,14 @@ if __name__ == "__main__":
         type=str,
         help="Device: cpu, cuda or auto (default: auto)",
     )
+    args.add_argument(
+        "-s",
+        "--save_name",
+        default="",
+        type=str,
+        help='Save name (default: "")',
+    )
 
     args = args.parse_args()
 
-    calculate_metrics(args.dataset_name, args.device)
+    calculate_metrics(args.dataset_name, args.device, args.save_name)

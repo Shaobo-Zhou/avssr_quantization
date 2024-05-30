@@ -12,7 +12,9 @@ from src.utils.io_utils import ROOT_PATH
 class CTCTextEncoder:
     EMPTY_TOK = ""
 
-    def __init__(self, alphabet=None, use_lm=False, use_bpe=False, **kwargs):
+    def __init__(
+        self, alphabet=None, use_lm=False, use_lm_small=False, use_bpe=False, **kwargs
+    ):
         """
         :param alphabet: alphabet for language. If None it will be set to ascii
         :param use_lm: whether to enable the support for Language Model Beam Search
@@ -38,9 +40,25 @@ class CTCTextEncoder:
 
         self.use_lm = use_lm
         if use_lm:
-            self.kenlm_path = ROOT_PATH / "data" / "lm" / "librispeech" / "4-gram.arpa"
-            self.unigram_path = self.kenlm_path.parent / "librispeech-vocab.txt"
-            self.lm_decoder = self._create_lm_decoder()
+            self.kenlm_path_big = (
+                ROOT_PATH / "data" / "lm" / "librispeech" / "4-gram.arpa"
+            )
+            self.unigram_path_big = self.kenlm_path_big.parent / "librispeech-vocab.txt"
+            self.lm_decoder_big = self._create_lm_decoder(
+                self.unigram_path_big, self.kenlm_path_big
+            )
+
+        self.use_lm = use_lm
+        if use_lm:
+            self.kenlm_path_small = (
+                ROOT_PATH / "data" / "lm" / "librispeech" / "3-gram.pruned.3e-7.arpa"
+            )
+            self.unigram_path_small = (
+                self.kenlm_path_small.parent / "librispeech-vocab.txt"
+            )
+            self.lm_decoder_small = self._create_lm_decoder(
+                self.unigram_path_small, self.kenlm_path_small
+            )
 
     def __len__(self):
         return len(self.vocab)
@@ -57,7 +75,7 @@ class CTCTextEncoder:
 
         return decoder
 
-    def _create_lm_decoder(self):
+    def _create_lm_decoder(self, unigram_path, kenlm_path):
         """
         Creates ctc decoder with the support of Language Model
         """
@@ -65,11 +83,11 @@ class CTCTextEncoder:
 
         vocab = [elem.upper() for elem in vocab]
 
-        with self.unigram_path.open() as f:
+        with unigram_path.open() as f:
             unigram_list = [t for t in f.read().strip().split("\n")]
 
         decoder = build_ctcdecoder(
-            vocab, kenlm_model_path=str(self.kenlm_path), unigrams=unigram_list
+            vocab, kenlm_model_path=str(kenlm_path), unigrams=unigram_list
         )
 
         return decoder
@@ -125,6 +143,7 @@ class CTCTextEncoder:
         lengths: torch.tensor,
         beam_size: int = 100,
         use_lm=False,
+        use_lm_small=False,
     ):
         """
         Performs beam search (with or without language model) and returns
@@ -133,9 +152,13 @@ class CTCTextEncoder:
         :param lengths: tensor of shape [N,] containing lengthes without padding
         :param beam_size: size of beam to use in decoding
         :param use_lm: use lm version or classic bs
+        :param use_lm_small: use small lm instead
         """
+        assert not (use_lm and use_lm_small)
         if use_lm:
-            decoder = self.lm_decoder
+            decoder = self.lm_decoder_big
+        elif use_lm_small:
+            decoder = self.lm_decoder_small
         else:
             decoder = self.bs_decoder
 

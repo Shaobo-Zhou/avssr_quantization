@@ -97,14 +97,21 @@ python3 inference.py model=YOUR_MODEL\
 Then calculate metrics using the following commands:
 
 ```bash
-cd scripts
-python3  calculate_metrics.py --dataset_name=YOUR_DATASET
+python3  scripts/calculate_metrics.py --dataset_name=YOUR_DATASET --save_name=SPECIAL_SAVE_NAME
 ```
 
-The metrics will be saved in `data/saved/YOUR_DATASET/SPLIT_NAME_metric.pth` and printed on the screen.
+The metrics will be saved in `data/saved/YOUR_DATASET/SPECIAL_SAVE_NAME_SPLIT_NAME_metric.pth` and printed on the screen.
 
 > [!NOTE]
 > Before running `inference.py`, download LM using `scripts/get_lm.py`
+
+It is also possible to run these two scripts for all the checkpoints (`model_best.pth`) that you have. To do this, run the following command:
+
+```bash
+python3 scripts/run_all_checkpoint.py -c=PATH_TO_ALL_CHECKPOINTS -d=YOUR_DATASET
+```
+
+`PATH_TO_ALL_CHECKPOINTS` is the directory with all your checkpoints (`saved`, for example).
 
 To calculate MACs (or FLOPs), run:
 

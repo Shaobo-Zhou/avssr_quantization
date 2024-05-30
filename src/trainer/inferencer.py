@@ -73,6 +73,13 @@ class Inferencer(BaseTrainer):
         lm_text_list = self.text_encoder.ctc_beam_search(
             tokens_logits, s_audio_length, beam_size=self.beam_size, use_lm=True
         )
+        lm_text_small_list = self.text_encoder.ctc_beam_search(
+            tokens_logits,
+            s_audio_length,
+            beam_size=self.beam_size,
+            use_lm=False,
+            use_lm_small=True,
+        )
 
         batch_size = tokens_logits.shape[0]
         id = batch_idx * batch_size
@@ -83,6 +90,7 @@ class Inferencer(BaseTrainer):
             argmax_text = argmax_text_list[i]
             bs_text = bs_text_list[i]
             lm_text = lm_text_list[i]
+            lm_text_small = lm_text_small_list[i]
             text = batch["s_text"][i]
             output_id = id + i
 
@@ -93,6 +101,7 @@ class Inferencer(BaseTrainer):
                 "argmax_text": argmax_text,
                 "bs_text": bs_text,
                 "lm_text": lm_text,
+                "lm_text_small": lm_text_small,
                 "s_text": text,
             }
 
