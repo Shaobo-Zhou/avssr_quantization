@@ -14,6 +14,7 @@ def inference_and_calculate_all(dataset_name, checkpoints_path):
     print(checkpoints_path)
 
     inference_cmd = f"python3 {INFERENCE_PATH} model=inference datasets={dataset_name}"
+    inference_cmd = inference_cmd + f" inferencer.save_path={dataset_name}"
     metrics_cmd = f"python3 {SCRIPT_PATH} -d={dataset_name}"
 
     for checkpoint_dir in os.listdir(checkpoints_path):
