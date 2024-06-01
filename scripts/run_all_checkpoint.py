@@ -18,10 +18,14 @@ def inference_and_calculate_all(dataset_name, checkpoints_path, bpe):
     metrics_cmd = f"python3 {SCRIPT_PATH} -d={dataset_name}"
 
     for checkpoint_dir in os.listdir(checkpoints_path):
-        if not bpe:
+        if bpe == 0:
             # skip BPE
             # all BPE saved checkpoints start with BPE
-            if checkpoint_dir[:3] == "BPE":
+            if "BPE" in checkpoint_dir:
+                continue
+        else:
+            # run only checkpoint with this BPE size
+            if f"BPE{bpe}" not in checkpoint_dir:
                 continue
 
         dir_path = Path(checkpoints_path) / checkpoint_dir
@@ -67,9 +71,9 @@ if __name__ == "__main__":
     args.add_argument(
         "-b",
         "--bpe",
-        default=False,
-        type=bool,
-        help="If false, skip bpe models (default: False)",
+        default=0,
+        type=int,
+        help="If 0, skip bpe models, otherwise use this vocabulary size (default: 0)",
     )
 
     args = args.parse_args()
