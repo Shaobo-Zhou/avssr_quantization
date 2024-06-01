@@ -27,8 +27,6 @@ def inference_and_calculate_all(dataset_name, checkpoints_path, bpe):
             # run only checkpoint with this BPE size
             if f"BPE{bpe}" not in checkpoint_dir:
                 continue
-            else:
-                inference_cmd = inference_cmd + " +text_encoder.use_bpe=True"
 
         dir_path = Path(checkpoints_path) / checkpoint_dir
         model_path = str(dir_path / "model_best.pth")
@@ -42,6 +40,10 @@ def inference_and_calculate_all(dataset_name, checkpoints_path, bpe):
         model_inference_cmd = (
             inference_cmd + f" +inferencer.from_pretrained={model_path}"
         )
+
+        if bpe != 0:
+            model_inference_cmd = model_inference_cmd + " +text_encoder.use_bpe=True"
+
         model_metrics_cmd = metrics_cmd + f" -s={checkpoint_dir}"
 
         # run inference
