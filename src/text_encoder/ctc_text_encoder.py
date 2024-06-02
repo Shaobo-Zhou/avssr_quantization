@@ -202,6 +202,10 @@ class CTCTextEncoder:
 
         text_list = [text.strip().lower() for text in text_list]
 
+        if self.nemo_model is not None:
+            # remove extra tokens
+            text_list = [re.sub(r"[^a-z ]", "", text) for text in text_list]
+
         return text_list
 
     @staticmethod
