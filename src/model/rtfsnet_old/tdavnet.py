@@ -130,6 +130,9 @@ class RTFSNetOld(BaseAVModel):
         fused_feats = fused_feats.transpose(-1, -2)  # time last
         # fused_feats = refined_features
 
+        if self.asr_type == "audio":
+            fused_feats = predicted_audio
+
         return {
             "predicted_audio": predicted_audio,
             "fused_feats": fused_feats,

@@ -377,6 +377,9 @@ class CTCNet(BaseAVEncoderMaskerDecoder):
         fused_feats = fused_feats.unsqueeze(1)
         predicted_audio = predicted_audio.squeeze(1)
 
+        if self.asr_type == "audio":
+            fused_feats = predicted_audio
+
         return {
             "predicted_audio": predicted_audio,
             "fused_feats": fused_feats,

@@ -1,6 +1,7 @@
 import torch
 from tqdm import tqdm
 
+from src.model.asr import ASRNemo
 from src.trainer.base_trainer import BaseTrainer
 
 
@@ -19,9 +20,6 @@ class Inferencer(BaseTrainer):
         save_path,
         batch_transforms=None,
     ):
-        assert (
-            config.inferencer.get("from_pretrained") is not None
-        ), "Provide checkpoint"
         self.config = config
         self.device = device
 
@@ -39,7 +37,12 @@ class Inferencer(BaseTrainer):
         self.save_path = save_path
 
         # init model
-        self._from_pretrained(config.inferencer.get("from_pretrained"))
+        # for asr nemo, init ss using ss_pretrain_path
+        if not isinstance(model.asr_model, ASRNemo):
+            assert (
+                config.inferencer.get("from_pretrained") is not None
+            ), "Provide checkpoint"
+            self._from_pretrained(config.inferencer.get("from_pretrained"))
 
     def move_batch_to_device(self, batch):
         """

@@ -53,15 +53,17 @@ def main(config):
     model.eval()
 
     batch = next(iter(dataloaders["test"]))
+    s_audio_length = batch["s_audio_length"]
+
     outputs = model(**batch)
     batch.update(outputs)
     # print(batch)
 
     mouth_emb = model.video_model(batch["s_video"])
 
-    full_inputs = (batch["mix_audio"], batch["s_video"], batch["s_audio_length"])
+    full_inputs = (batch["mix_audio"], batch["s_video"], s_audio_length)
     video_inputs = (batch["s_video"],)
-    asr_inputs = (batch["fused_feats"], batch["s_audio_length"])
+    asr_inputs = (batch["fused_feats"], s_audio_length)
     ss_inputs = (batch["mix_audio"], mouth_emb)
 
     full_macs, _ = profile(model, full_inputs, verbose=False)

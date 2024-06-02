@@ -13,11 +13,20 @@ class CTCTextEncoder:
     EMPTY_TOK = ""
 
     def __init__(
-        self, alphabet=None, use_lm=False, use_lm_small=False, use_bpe=False, **kwargs
+        self,
+        alphabet=None,
+        use_lm=False,
+        use_lm_small=False,
+        use_bpe=False,
+        nemo_model=None,
+        **kwargs
     ):
         """
         :param alphabet: alphabet for language. If None it will be set to ascii
         :param use_lm: whether to enable the support for Language Model Beam Search
+        :param use_lm_small: use Small Language Model for Beam Search
+        :param use_bpe: Byte Pair Encoding version of encoder
+        :param nemo_model: initialize vocabulary using nemo model
         """
 
         if alphabet is None:
@@ -25,6 +34,18 @@ class CTCTextEncoder:
 
         self.alphabet = alphabet
         self.vocab = [self.EMPTY_TOK] + list(self.alphabet)
+
+        self.nemo_model = nemo_model
+
+        if self.nemo_model is not None:
+            # import here to avoid long init
+            import nemo.collections.asr as nemo_asr
+
+            nemo_model = nemo_asr.models.EncDecCTCModelBPE.from_pretrained(
+                model_name=nemo_model
+            )
+            self.vocab = nemo_model.decoder.vocabulary
+
         self.ind2char = dict(enumerate(self.vocab))
         self.char2ind = {v: k for k, v in self.ind2char.items()}
 
@@ -100,6 +121,12 @@ class CTCTextEncoder:
         Works for both BPE and usual alphabet
         """
         text = self.normalize_text(text)
+
+        if self.nemo_model is not None:
+            # for now, we do not support proper encoding for nemo
+            # nemo is used only during inference, so encoding is not useful
+            return torch.zeros(len(text))
+
         if self.use_bpe:
             return torch.tensor(self.tokenizer.encode(text).ids)
         else:
@@ -128,6 +155,11 @@ class CTCTextEncoder:
         :param probs: probabilities from model with shape [N, L, H]
         :param lengths: tensor of shape [N,] containing lengthes without padding
         """
+
+        if self.nemo_model is not None:
+            # use beam search with beam size = 1 instead
+            # it is equivalent to argmax
+            return self.ctc_beam_search(probs, lengths, beam_size=1)
 
         probs = torch.nn.functional.log_softmax(probs.detach().cpu(), -1)  # to be sure
         logits_list = [probs[i][: lengths[i]].numpy() for i in range(lengths.shape[0])]
