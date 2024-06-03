@@ -1,6 +1,7 @@
 _target_: src.model.AVSSRModel
 ss_model:
   _target_: src.model.rtfsnet.RTFSNet
+  asr_type: audio
   n_src: 1
   pretrained_vout_chan: 1024  # output from pretrained model
 
