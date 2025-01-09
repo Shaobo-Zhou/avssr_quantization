@@ -1,6 +1,6 @@
 import torch
 from torch import nn
-
+import time
 from src.utils.io_utils import ROOT_PATH
 
 
@@ -15,11 +15,12 @@ class AVSSRModel(nn.Module):
         video_model,  # ResNet18 or ShuffleNet
         asr_model,  # model from src.model.asr
         train_video_model=False,
-        train_ss_model=True,
+        train_ss_model=False,
         ss_pretrain_path=None,
         ss_teacher=None,  # AVSS teacher used for distillation on the fly
         ss_teacher_proj=None,
         asr_aug=None,
+        skip_ASR=False,
         **kwargs,
     ) -> None:
         super().__init__()
@@ -39,11 +40,11 @@ class AVSSRModel(nn.Module):
             )
 
         self.asr_aug = asr_aug
-
         if ss_pretrain_path is not None:
             ss_pretrain_path = str(ROOT_PATH / "data" / "pretrain" / ss_pretrain_path)
             print(f"Loading SS weights from {ss_pretrain_path}...")
             self.ss_model.init_from(ss_pretrain_path)
+        self.skip_ASR = skip_ASR
 
     def train(self, mode: bool = True):
         super().train(mode)
@@ -61,7 +62,8 @@ class AVSSRModel(nn.Module):
         return self
 
     def forward(self, mix_audio, s_video, s_audio_length, **batch):
-        # get predicted_audio, fused_features, etc.
+        
+        #start_time = time.time()
         if self.video_model is None:
             ss_batch = self.ss_model(mix_audio)
         else:
@@ -70,22 +72,18 @@ class AVSSRModel(nn.Module):
                     mouth_emb = self.video_model(s_video)
             else:
                 mouth_emb = self.video_model(s_video)
-
             if not self.train_ss_model:
                 with torch.no_grad():
                     ss_batch = self.ss_model(mix_audio, mouth_emb)
             else:
                 ss_batch = self.ss_model(mix_audio, mouth_emb)
-
-        # get tokens_logits, s_audio_length
-        # if self.training and self.asr_aug is not None:
-        #     ss_batch["fused_feats"] = self.asr_aug(ss_batch["fused_feats"])
-        asr_batch = self.asr_model(
-            ss_batch["fused_feats"], s_audio_length, self.asr_aug
-        )
-
-        # join keys
-        ss_batch.update(asr_batch)
+        
+        if self.skip_ASR == False:
+            asr_batch = self.asr_model(
+                ss_batch["fused_feats"], s_audio_length, self.asr_aug
+            )  
+            # join keys
+            ss_batch.update(asr_batch)
 
         # teacher for KD
         if self.ss_teacher is not None:

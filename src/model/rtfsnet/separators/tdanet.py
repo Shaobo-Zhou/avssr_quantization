@@ -29,7 +29,16 @@ class TDANetBlock(nn.Module):
         self.layers = layers
         self.is2d = is2d
 
-        self.pool = F.adaptive_avg_pool2d if self.is2d else F.adaptive_avg_pool1d
+        #self.pool = F.adaptive_avg_pool2d if self.is2d else F.adaptive_avg_pool1d
+        if self.is2d:
+            # 2D Pooling for 251x129 -> 125x64
+            self.pool_2d_large = nn.AvgPool2d(kernel_size=(2, 2), stride=(2, 2))
+
+        else:
+            # 1D Pooling for 50 -> 7, 25 -> 7, 13 -> 7
+            self.pool_1d_50 = nn.AvgPool1d(kernel_size=7, stride=7)  # From 50 to 7
+            self.pool_1d_25 = nn.AvgPool1d(kernel_size=1, stride=4)  # From 25 to 7
+            self.pool_1d_13 = nn.AvgPool1d(kernel_size=1, stride=2)  # From 13 to 7
 
         self.gateway = ConvNormAct(
             in_chan=self.in_chan,
@@ -121,12 +130,27 @@ class TDANetBlock(nn.Module):
             )
 
         # global pooling
-        shape = downsampled_outputs[-1].shape
+        """ shape = downsampled_outputs[-1].shape
+        print("pool output size:", shape[-(len(shape) // 2) :])
         global_features = sum(
-            self.pool(features, output_size=shape[-(len(shape) // 2) :])
+            self.pool(features)
             for features in downsampled_outputs
-        )
-
+        ) """
+        pooled_features_list = []
+        for features in downsampled_outputs:
+            if self.is2d and features.shape[-2:] == (251, 129):
+                pooled_features = self.pool_2d_large(features)
+            elif self.is2d and features.shape[-2:] == (125,64):
+                pooled_features = features
+            elif not self.is2d:
+                if features.shape[-1] == 50:
+                    pooled_features = self.pool_1d_50(features)
+                elif features.shape[-1] == 25:
+                    pooled_features = self.pool_1d_25(features)
+                elif features.shape[-1] == 13:
+                    pooled_features = self.pool_1d_13(features)
+            pooled_features_list.append(pooled_features)
+        global_features = sum(pooled_features_list)
         # global attention module
         global_features = self.globalatt(global_features)  # B, N, T, (F)
 

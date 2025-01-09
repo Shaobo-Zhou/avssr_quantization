@@ -3,7 +3,7 @@ import math
 
 import torch
 import torch.nn as nn
-
+from .stft import STFT
 from src.model.rtfsnet.layers import ConvNormAct
 
 
@@ -135,6 +135,7 @@ class STFTEncoder(BaseEncoder):
         act_type: str = "ReLU",
         norm_type: str = "gLN",
         bias: bool = False,
+        return_complex = False,
         *args,
         **kwargs,
     ):
@@ -148,6 +149,8 @@ class STFTEncoder(BaseEncoder):
         self.act_type = act_type
         self.norm_type = norm_type
         self.bias = bias
+        self.return_complex = return_complex
+
 
         self.conv = ConvNormAct(
             in_chan=2,
@@ -161,12 +164,18 @@ class STFTEncoder(BaseEncoder):
             is2d=True,
         )
 
+        """ self.stft = STFT(
+            filter_length=self.win,  # n_fft equivalent
+            hop_length=self.hop_length,
+            win_length=self.win,
+            window='hann'  # Use the same window type as torch.stft
+        ) """
         self.register_buffer("window", torch.hann_window(self.win), False)
 
     def forward(self, x: torch.Tensor):
         x = self.unsqueeze_to_2D(x)
 
-        spec = torch.stft(
+        """ spec = torch.stft(
             x,
             n_fft=self.win,
             hop_length=self.hop_length,
@@ -176,7 +185,22 @@ class STFTEncoder(BaseEncoder):
 
         spec = (
             torch.stack([spec.real, spec.imag], 1).transpose(2, 3).contiguous()
-        )  # B, 2, T, F
+        )  # B, 2, T, F """
+        spec = torch.stft(
+        x,
+        n_fft=self.win,
+        hop_length=self.hop_length,
+        window=self.window.to(x.device),
+        return_complex=self.return_complex,  # Produces output with real and imaginary in separate channels
+        )  # Output shape: [batch, frequency_bins, time_frames, 2]
+
+        """ magnitude, phase = self.stft.transform(x)
+        real = magnitude * torch.cos(phase)
+        imag = magnitude * torch.sin(phase)
+        spec = torch.stack((real, imag), dim=-1) """
+
+        # Transpose and reshape to match expected input for self.conv
+        spec = spec.permute(0, 3, 2, 1)  # [batch, 2 (real, imag), time_frames, frequency_bins]
         spec_feature_map = self.conv(spec)  # B, C, T, F
 
         return spec_feature_map

@@ -95,9 +95,9 @@ class RTFSNet(BaseAVModel):
 
     def forward(
         self, audio_mixture: torch.Tensor, mouth_embedding: torch.Tensor = None
-    ):
+    ):  
+        
         audio_mixture_embedding = self.encoder(audio_mixture)  # B, 1, L -> B, N, T, (F)
-
         audio = self.audio_bottleneck(audio_mixture_embedding)  # B, C, T, (F)
         video = self.video_bottleneck(
             mouth_embedding
@@ -145,8 +145,10 @@ class RTFSNet(BaseAVModel):
         checkpoint = torch.load(path)
         new_state_dict = {}
         for k, v in checkpoint["state_dict"].items():
+            if k.startswith("decoder.istft.stft."):
+                continue
             if ".transform_module" in k:
                 k = k.replace(".transform_module", "")
                 v = v.transpose(0, 1)
             new_state_dict[k] = v
-        self.load_state_dict(new_state_dict)
+        self.load_state_dict(new_state_dict, strict=False)
