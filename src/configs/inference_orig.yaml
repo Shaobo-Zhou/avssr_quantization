@@ -1,0 +1,58 @@
+defaults:
+  - model: rtfsnet4_small_nemo_video
+  - writer: wandb
+  - metrics: main
+  - datasets: lrs2 #lrs2_test_only
+  - dataloader: main
+  - transforms: main
+  - quantization: main
+  - lr_scheduler: ReduceLROnPlateau
+  - _self_
+optimizer:
+  _target_: torch.optim.AdamW
+  lr: 1e-5
+  weight_decay: 1e-4
+optimizer_params:
+  ss:
+    lr: ${optimizer.lr}
+  asr:
+    lr: ${optimizer.lr}
+loss_function:
+  _target_: src.loss.AVSSRLoss
+  asr_coef: 1
+  ss_coef: 1
+text_encoder:
+  _target_: src.text_encoder.CTCTextEncoder
+  #use_lm: True #False
+  #use_lm_small: True #False
+  nemo_model: "stt_en_conformer_ctc_small"
+  beam_size: 100
+
+
+inferencer:
+  device_tensors: ["mix_audio", "s_audio", "s_video", "s_tokens_length", "s_audio_length"] # which tensors should be on device (ex. GPU)
+  device: cpu # device name or "auto"
+  #quantization: True
+  SS_targets: False
+  #load_path: "lrs2_SS"
+  override: False # if True, will override the previous run with the same name
+  save_path: "lrs2" # use dataset name
+  seed: 1
+  # include from_pretrained
+
+trainer:
+  log_step: 5
+  n_epochs: 100
+  epoch_len: 5000
+  max_grad_norm: 5
+  device_tensors: ["mix_audio", "s_audio", "s_video", "s_tokens_length", "s_audio_length"] # which tensors should be on device (ex. GPU)
+  resume_from: null # null or path to the checkpoint dir with *.pth and config.yaml
+  device: auto # device name or "auto"
+  override: True # if True, will override the previous run with the same name
+  monitor: "min val_ss_loss" # "off" or "max/min metric_name", i.e. our goal is to maximize/minimize metric
+  save_period: 5 # checkpoint each save_period epochs in addition to the best epoch
+  early_stop: ${trainer.n_epochs} # epochs for early stopping
+  save_dir: "saved_new/train"
+  seed: 1
+  grad_accum_steps: 2
+  lr_scheduler_type: "epoch"

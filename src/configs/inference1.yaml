@@ -15,8 +15,8 @@ text_encoder:
 
 inferencer:
   device_tensors: ["mix_audio", "s_audio", "s_video", "s_tokens_length", "s_audio_length"] # which tensors should be on device (ex. GPU)
-  device: cpu # device name or "auto"
-  quantization: True
+  device: auto # device name or "auto"
+  quantization: False
   SS_targets: True
   load_path: "lrs2_SS"
   override: False # if True, will override the previous run with the same name

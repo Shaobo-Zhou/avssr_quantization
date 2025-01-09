@@ -24,6 +24,7 @@ ss_model:
     kernel_size: 3
     stride: 1
     bias: false
+    return_complex: false
     act_type:
     norm_type:
 
@@ -106,6 +107,10 @@ video_model:
   width_mult: 0.5
   pretrain: lrw_snv05x_tcn1x.pth.tar
 train_video_model: false
+train_ss_model: false
 asr_model:
   _target_: src.model.asr.ASRNemo
   model_name: "stt_en_conformer_ctc_small"
+  #checkpoint: 
+
+ss_pretrain_path: "rtfsnet/rtfsnet4_small_video_conformer_demixed.pth"
