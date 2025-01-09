@@ -140,6 +140,7 @@ class CTCTextEncoder:
         last_char = self.EMPTY_TOK
         text = []
         for ind in inds:
+            #print(ind)
             if self.ind2char[ind] == last_char:
                 continue
             char = self.ind2char[ind]
@@ -166,6 +167,7 @@ class CTCTextEncoder:
 
         text_list = []
         for logits in logits_list:
+            #print(logits.argmax(-1).shape) #logits: [51,1024]
             text_list.append(self.ctc_decode(logits.argmax(-1)))
         return text_list
 
