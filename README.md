@@ -65,7 +65,7 @@ To run inference with the quantized model, run the following command:
 ```bash
 python3 inference_quant.py --quant_config_name=YOUR_QUANTIZATION_CONFIG\
 ```
-Additionally, you can set if you want to use percentile clipping and equalization in the ``` --percentile``` and ``` --equalization``` flag, respectively. You can select the quantization scheme to be symmetric/affine with the ``` --qscheme``` flag
+Additionally, you can set if you want to use percentile clipping and equalization in the ```--percentile``` and ```--equalization``` flag, respectively. You can select the quantization scheme to be symmetric/affine with the ```--qscheme``` flag
 
 Then calculate metrics using the following commands:
 
@@ -119,13 +119,15 @@ path/to/trtexec --loadEngine=YOUR_ENGINE_PATH --verbose --int8 --allowGPUFallbac
 ```
 
 This will pass random samples as input, to use true samples, specify with `` --loadInputs``
+Alternatively, you can do this with TensorRT Python API using ``jetson_scripts/trt_inference.py``
+If you want to perform inference using only the ASR model, you can use the data available in ``/scrap/users/shzhou/data/``preprocessed_inputs/. These files contain pre-saved outputs from the Speech Separation (SS) model that have already been processed through the preprocessor of the ASR model.
 
 ### Running Inference in Python on Jetson
 
 Use the following command:
 
 ```bash
-python3 pipeline.py --engine_path=/path/to/ASR_engine \
+python3 jetson_scripts/pipeline.py --engine_path=/path/to/ASR_engine \
                        --ss_model_path=/path/to/ss_model.onnx \
                        --output_folder=/path/to/output
 ```
