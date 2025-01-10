@@ -48,31 +48,6 @@ Follow these steps to work with the project:
    ```bash
    pip install -r requirements.txt
    ```
-
-2. Install `pre-commit`:
-
-   ```bash
-   pre-commit install
-   ```
-
-3. Download pretrained models:
-
-   ```bash
-   python3 scripts/get_pretrain.py
-   ```
-
-4. [LRS2-Mix](https://huggingface.co/datasets/JusperLee/LRS2-2Mix) does not have full audio and text. Download [LRS2 dataset](https://www.robots.ox.ac.uk/~vgg/data/lip_reading/lrs2.html) and use these scripts to get audio and text:
-
-   ```bash
-   cd scripts
-   python3 get_audio_and_text.py --dataset_name=lrs2_rebuild --video_root_path=PATH_TO_RAW_LRS2
-   ```
-
-## Experiments
-
-> [!NOTE]
-> For pipeline checking, you can download example dataset using `gdown 1ieOhhGkktegV29ct3xB-x69yDm58BENT` and unzip it into `data/example`.
-
 ### Training
 
 To train the model, run the following command:
@@ -83,16 +58,14 @@ python3 train.py --config_name=CONFIG_NAME # add optional Hydra parameters
 
 To use ASR augmentation, add `+model/asr_aug=config_name`.
 
-### Getting Metrics
+### Inference
 
-To save all predictions, including beam search and its LM version, run the following command:
+To run inference with the quantized model, run the following command:
 
 ```bash
-python3 inference.py model=YOUR_MODEL\
-   datasets=YOUR_DATASET\
-   text_encoder.beam_size=BEAM_SIZE\
-   +inferencer.from_pretrained=PATH_TO_CHECKPOINT
+python3 inference_quant.py --quant_config_name=YOUR_QUANTIZATION_CONFIG\
 ```
+Additionally, you can set if you want to use percentile clipping and equalization in the ``` --percentile``` and ``` --equalization``` flag, respectively. You can select the quantization scheme to be symmetric/affine with the ``` --qscheme``` flag
 
 Then calculate metrics using the following commands:
 
@@ -102,16 +75,6 @@ python3  scripts/calculate_metrics.py --dataset_name=YOUR_DATASET --save_name=SP
 
 The metrics will be saved in `data/saved/YOUR_DATASET/SPECIAL_SAVE_NAME_SPLIT_NAME_metric.pth` and printed on the screen.
 
-> [!NOTE]
-> Before running `inference.py`, download LM using `scripts/get_lm.py`
-
-It is also possible to run these two scripts for all the checkpoints (`model_best.pth`) that you have. To do this, run the following command:
-
-```bash
-python3 scripts/run_all_checkpoint.py -c=PATH_TO_ALL_CHECKPOINTS -d=YOUR_DATASET
-```
-
-`PATH_TO_ALL_CHECKPOINTS` is the directory with all your checkpoints (`saved`, for example).
 
 To calculate MACs (or FLOPs), run:
 
@@ -119,29 +82,33 @@ To calculate MACs (or FLOPs), run:
 python3 flops.py model=MODEL_THAT_YOU_WANT text_encoder.use_lm=False dataloader.batch_size=1
 ```
 
-### Converting AVSSR StateDict to SS StateDict:
+### Converting to onnx:
 
 Run the following script:
 
 ```bash
-python3 scripts/get_ss_state_dict_from_checkpoint.py -c=AVSSR_CHECKPOINT.pth -o=data/pretrain/CTCNET_OR_RTFSNET/NAME.pth
+python3 to_onnx.py 
 ```
 
-### Saving Embeddings for Knowledge Distillation
+### Run Inference with ONNX Runtime
 
-To save embeddings from pre-trained model, run the following command:
+### Converting to TensorRT engine
+
+Use the following command:
 
 ```bash
-python3 save_embeddings.py model=MODEL_THAT_YOU_WANT
+path/to/trtexec --onnx=YOUR_MODEL.onnx --verbose --int8 --allowGPUFallback --saveEngine=YOUR_ENGINE_PATH
 ```
+### Running Inference with TensorRT engine
 
-Here is an example for CTCNet:
+Use the following command:
 
 ```bash
-python3 save_embeddings.py model=ctcnet +model.ss_pretrain_path="ctcnet/lrs2_best_model.pt" model.ss_model.video_config.shared=False saver.save_key=kd_embedding
+path/to/trtexec --loadEngine=YOUR_ENGINE_PATH --verbose --int8 --allowGPUFallback --iterations=N
 ```
 
-**Note**: It is also possible to do KD on the fly (if you cannot save tensors due to space limit). To do this, add `+model/ss_teacher=TEACHER_NAME +loss_function.kd_coef=KD_COEF` to your standard `train.py` run.
+This will pass random samples as input, to use true samples, specify with `` --loadInputs``
+
 
 ## Credits
 
