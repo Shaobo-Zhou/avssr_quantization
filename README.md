@@ -87,7 +87,7 @@ python3 flops.py model=MODEL_THAT_YOU_WANT text_encoder.use_lm=False dataloader.
 Run the following script:
 
 ```bash
-python3 to_onnx.py 
+python3 to_onnx.py --quant_config_name=YOUR_QUANTIZATION_CONFIG\
 ```
 
 ### Converting to TensorRT engine
