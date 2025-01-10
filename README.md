@@ -120,7 +120,7 @@ path/to/trtexec --loadEngine=YOUR_ENGINE_PATH --verbose --int8 --allowGPUFallbac
 
 This will pass random samples as input, to use true samples, specify with `` --loadInputs``
 Alternatively, you can do this with TensorRT Python API using ``jetson_scripts/trt_inference.py``
-If you want to perform inference using only the ASR model, you can use the data available in ``/scrap/users/shzhou/data/``preprocessed_inputs/. These files contain pre-saved outputs from the Speech Separation (SS) model that have already been processed through the preprocessor of the ASR model.
+If you want to perform inference using only the ASR model, you can use the data available in ``/scrap/users/shzhou/data/preprocessed_inputs/``. These files contain pre-saved outputs from the Speech Separation (SS) model that have already been processed through the preprocessor of the ASR model.
 
 ### Running Inference in Python on Jetson
 
