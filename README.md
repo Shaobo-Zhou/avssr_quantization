@@ -101,7 +101,8 @@ python3 jetson_scripts/force_quant_sym.py model_path=PATH_TO_YOUR_MODEL
 ```bash
 python3 jetson_scripts/fix_dequant.py model_path=PATH_TO_YOUR_MODEL
 ```
-3. Ideally use ```onnxsim``` before and after this process to simply the model, and improve compatibility with TensorRT
+3. Use onnxsim to simplify the ONNX model and improve compatibility with TensorRT. It is recommended to run this tool both before and after the previous steps:
+``` onnxsim PATH_TO_YOUR_MODEL SIMPLIFIED_MODEL_PATH```
 
 
 Use the following command:
