@@ -90,9 +90,19 @@ Run the following script:
 python3 to_onnx.py 
 ```
 
-### Run Inference with ONNX Runtime
-
 ### Converting to TensorRT engine
+
+Before converting to TensorRT: Go through the following steps to change the quantization scheme to symmetric quantization with INT8 if it is not already done (Pytorch enforces affine quantization on activations using UINT8 representation):
+1. Run: 
+```bash
+python3 jetson_scripts/force_quant_sym.py model_path=PATH_TO_YOUR_MODEL
+```
+2. Run: 
+```bash
+python3 jetson_scripts/fix_dequant.py model_path=PATH_TO_YOUR_MODEL
+```
+3. Ideally use ```onnxsim``` before and after this process to simply the model, and improve compatibility with TensorRT
+
 
 Use the following command:
 
@@ -109,7 +119,21 @@ path/to/trtexec --loadEngine=YOUR_ENGINE_PATH --verbose --int8 --allowGPUFallbac
 
 This will pass random samples as input, to use true samples, specify with `` --loadInputs``
 
+### Running Inference in Python on Jetson
 
+Use the following command:
+
+```bash
+python3 pipeline.py --engine_path=/path/to/ASR_engine \
+                       --ss_model_path=/path/to/ss_model.onnx \
+                       --output_folder=/path/to/output
+```
+
+### Collect hardware metrics
+
+You can observe hardware metrics by installing the ``jtop`` package 
+
+For TensorRT, ``trtexec``command also provides metrics such as latency
 ## Credits
 
 This repository is based on a heavily modified fork of [pytorch_project_template](https://github.com/Blinorot/pytorch_project_template).
