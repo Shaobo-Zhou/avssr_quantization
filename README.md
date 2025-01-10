@@ -58,7 +58,7 @@ python3 train.py --config_name=CONFIG_NAME # add optional Hydra parameters
 
 To use ASR augmentation, add `+model/asr_aug=config_name`.
 
-### Run Inference
+### Inference
 
 To run inference with the quantized model, run the following command:
 
@@ -82,29 +82,33 @@ To calculate MACs (or FLOPs), run:
 python3 flops.py model=MODEL_THAT_YOU_WANT text_encoder.use_lm=False dataloader.batch_size=1
 ```
 
-### Converting AVSSR StateDict to SS StateDict:
+### Converting to onnx:
 
 Run the following script:
 
 ```bash
-python3 scripts/get_ss_state_dict_from_checkpoint.py -c=AVSSR_CHECKPOINT.pth -o=data/pretrain/CTCNET_OR_RTFSNET/NAME.pth
+python3 to_onnx.py 
 ```
 
-### Saving Embeddings for Knowledge Distillation
+### Run Inference with ONNX Runtime
 
-To save embeddings from pre-trained model, run the following command:
+### Converting to TensorRT engine
+
+Use the following command:
 
 ```bash
-python3 save_embeddings.py model=MODEL_THAT_YOU_WANT
+path/to/trtexec --onnx=YOUR_MODEL.onnx --verbose --int8 --allowGPUFallback --saveEngine=YOUR_ENGINE_PATH
 ```
+### Running Inference with TensorRT engine
 
-Here is an example for CTCNet:
+Use the following command:
 
 ```bash
-python3 save_embeddings.py model=ctcnet +model.ss_pretrain_path="ctcnet/lrs2_best_model.pt" model.ss_model.video_config.shared=False saver.save_key=kd_embedding
+path/to/trtexec --loadEngine=YOUR_ENGINE_PATH --verbose --int8 --allowGPUFallback --iterations=N
 ```
 
-**Note**: It is also possible to do KD on the fly (if you cannot save tensors due to space limit). To do this, add `+model/ss_teacher=TEACHER_NAME +loss_function.kd_coef=KD_COEF` to your standard `train.py` run.
+This will pass random samples as input, to use true samples, specify with `` --loadInputs``
+
 
 ## Credits
 
