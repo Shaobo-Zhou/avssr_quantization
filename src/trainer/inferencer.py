@@ -5,8 +5,7 @@ import time
 import os
 import re
 from src.model.asr import ASRNemo
-from quantization import QuantizedASRModel
-from quantization_brevitas import QuantizedBrevModel
+from quant_utils.quantization import QuantizedASRModel
 from src.trainer.base_trainer import BaseTrainer
 
 
@@ -71,7 +70,7 @@ class Inferencer(BaseTrainer):
 
         # init model
         # for asr nemo, init ss using ss_pretrain_path
-        if not ((isinstance(model.asr_model, ASRNemo)) or (isinstance(model, QuantizedASRModel)) or (isinstance(model, QuantizedBrevModel))):
+        if not ((isinstance(model.asr_model, ASRNemo)) or (isinstance(model, QuantizedASRModel))):
             assert (
                 config.inferencer.get("from_pretrained") is not None
             ), "Provide checkpoint"

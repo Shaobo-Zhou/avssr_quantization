@@ -34,7 +34,7 @@ inferencer:
   device: cpu # device name or "auto"
   #quantization: True
   SS_targets: False
-  #load_path: "lrs2_SS"
+  load_path: "lrs2_SS"
   override: False # if True, will override the previous run with the same name
   save_path: "lrs2" # use dataset name
   seed: 1
